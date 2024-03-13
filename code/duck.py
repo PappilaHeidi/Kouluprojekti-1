@@ -5,14 +5,14 @@ import duckdb
 
 start = time.time()
 
-data = duckdb.sql("SELECT COUNT(*) FROM './data/projekti1/*.csv' WHERE timestamp \
+data = duckdb.sql("SELECT * FROM './data/projekti1/*.csv' WHERE timestamp \
                    BETWEEN '2019-04-01 00:00:00' AND '2019-04-31 00:00:00'" )
 
 print(data)
 
 mid = time.time()
 
-data.to_csv("tulos.csv")
+data.to_csv("./data/tulos.csv")
 
 end = time.time()
 
