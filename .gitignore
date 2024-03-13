@@ -257,4 +257,8 @@ $RECYCLE.BIN/
 
 **/data/**
 !**/node3200.kevennetty.csv
+!**/data/projekti1**
+!**/projekti1/initdb.sql
+!**/projekti1/createdb.sh
+!**/projekti1/populate-mariadb.sh
 streamlit
