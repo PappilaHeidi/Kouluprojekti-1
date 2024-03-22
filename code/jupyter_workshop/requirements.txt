@@ -1,0 +1,7 @@
+duckdb
+pandas
+polars
+matplotlib
+numpy
+Pathlib
+jupysql
