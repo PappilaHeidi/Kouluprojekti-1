@@ -13,4 +13,7 @@ for path in pathlist:
     print(path_in_str)
 
 
-#korjataan z-arvot ja ms pois datasta
+#korjataan z,q-arvot ja ms pois datasta
+#datetime ja utc Helsinki
+#x,y outliereiden poisto
+

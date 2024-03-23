@@ -8,8 +8,6 @@ def read_csv_raw(filename):
     df = pd.read_csv(filename, 
                   sep=",", 
                   header=0,
-                  index_col=['timestamp'],
-                  parse_dates=['timestamp']
 )
     print("found", df.size, "lines")
     return df
