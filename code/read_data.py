@@ -13,4 +13,3 @@ def read_csv_raw(filename):
 )
     print("found", df.size, "lines")
     return df
-
