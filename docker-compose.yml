@@ -13,8 +13,12 @@ services:
       - jupyterhub-network
       
 
-  datascience-notebook:
-    build: ./code/jupyter_workshop/
+  jupyter-workshop:
+    image: jupyter-workshop
+    build: 
+      context: ./code/jupyter_workshop
+      dockerfile: Dockerfile
+    container_name: jupyter-workshop
     volumes:
       - ./code:/home/jovyan/work
     ports:

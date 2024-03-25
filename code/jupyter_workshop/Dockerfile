@@ -1,7 +1,6 @@
 
 # Jupyter Dockerfile
-FROM jupyter/scipy-notebook:latest
-
+FROM jupyter/scipy-notebook
 # Set working directory
 WORKDIR /home/jovyan/work
 
