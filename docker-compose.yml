@@ -1,7 +1,7 @@
 version: "3"
 services:
   iiwari-mariadb-server:
-    container_name: iiwari-mariadb-server
+    container_name: iiwari-mariadb-server2
     image: mariadb:latest
     ports:
       - 3307:3306
@@ -11,10 +11,10 @@ services:
       - vol-iiwari-mariadb-data:/var/lib/mysql
     networks:
       - jupyterhub-network
+      
 
   datascience-notebook:
-    image: jupyter/scipy-notebook:latest
-    container_name: jupyterlab2
+    build: ./code/jupyter_workshop/
     volumes:
       - ./code:/home/jovyan/work
     ports:
@@ -26,9 +26,14 @@ services:
     networks:
       - jupyterhub-network
 
+
+    
 networks:
   jupyterhub-network:
     external: false
 volumes:
   vol-iiwari-mariadb-data:
     external: false
+
+  
+

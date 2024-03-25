@@ -1,5 +1,6 @@
 """ Tässä kelpo esimerkki DuckDB:n suorituskyvystä vs. any-other-database
 """
+
 import time
 import duckdb
 

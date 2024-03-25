@@ -1,3 +1,15 @@
+# Dockerfile
+Rakenna docker image
+
+Siirry oikeaan hakemistoon
+```shell=
+cd /code/jupyter_workshop
+```
+
+rakenna levykuva
+```shell=
+docker build -t jupyter-workshop . #dockerfile on /code/jupyter_workshop kansiossa
+
 # Ympäristön pystyttäminen
 
 Aja projektin juurikansiossa komento
@@ -6,6 +18,9 @@ Aja projektin juurikansiossa komento
 docker-compose up
 ```
 
+Jos lisäät kirjastoja jupyter ympäristöön (requirements.txt), niin rakenna levykuva uusiksi
+
+
 # Ympäristön alasajo
 
 Aja projektin juurikansiossa komento
@@ -13,6 +28,8 @@ Aja projektin juurikansiossa komento
 ```shell=
 docker-compose down
 ```
+
+tai ctrl+c
 
 # Jupyterlab
 

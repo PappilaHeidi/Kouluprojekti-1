@@ -255,12 +255,14 @@ $RECYCLE.BIN/
 
 ## OMAT
 
+#data hakemisto ja kaikki sen alihakemistot eivät tule gittiin, paitsi !-komennolla olevat, jotka sisällytetään uudelleen gittiin.
 **/data/**
 !**/node3200.kevennetty.csv
 !**/data/projekti1**
 !**/projekti1/initdb.sql
 !**/projekti1/createdb.sh
 !**/projekti1/populate-mariadb.sh
+
 streamlit
 projekti1.zip
 projekti1/
