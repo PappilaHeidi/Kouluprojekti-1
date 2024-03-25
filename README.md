@@ -1,25 +1,25 @@
 # Dockerfile
-Rakenna docker image
+Pystytä docker ensimmäistä kertaa
 
-Siirry oikeaan hakemistoon
+rakenna levykuvat ja kontit terminaalissa
 ```shell=
-cd /code/jupyter_workshop
-```
-
-rakenna levykuva
-```shell=
-docker build -t jupyter-workshop . #dockerfile on /code/jupyter_workshop kansiossa
+docker-compose build
 
 # Ympäristön pystyttäminen
 
-Aja projektin juurikansiossa komento
-
+Docker-konttien käynnistys
 ```shell=
 docker-compose up
 ```
 
 Jos lisäät kirjastoja jupyter ympäristöön (requirements.txt), niin rakenna levykuva uusiksi
+```shell=
+#siirry oikeaan hakemistoon
+cd code/jupyter_workshop
+docker build -t jupyter-workshop .
 
+#ja ylösajo
+docker-compose up
 
 # Ympäristön alasajo
 
