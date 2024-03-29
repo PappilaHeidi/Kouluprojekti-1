@@ -11,6 +11,19 @@ services:
       - vol-iiwari-mariadb-data:/var/lib/mysql
     networks:
       - jupyterhub-network
+
+    
+  streamlit:
+    build:
+      context: ./code/streamlit
+      dockerfile: Dockerfile
+    container_name: streamlit-image
+    volumes:
+    - ./code:/streamlit
+    ports:
+    - 8501:8501
+    networks:
+      - jupyterhub-network
       
 
   jupyter-workshop:
@@ -30,8 +43,8 @@ services:
     networks:
       - jupyterhub-network
 
-
     
+
 networks:
   jupyterhub-network:
     external: false
