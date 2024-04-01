@@ -5,4 +5,3 @@ matplotlib
 numpy
 Pathlib
 jupysql
-streamlit==1.29.*

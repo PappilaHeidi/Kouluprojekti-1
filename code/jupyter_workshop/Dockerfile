@@ -1,6 +1,6 @@
-
 # Jupyter Dockerfile
 FROM jupyter/scipy-notebook
+
 # Set working directory
 WORKDIR /home/jovyan/work
 
@@ -12,9 +12,6 @@ RUN pip install -r requirements.txt
 
 # Copy Jupyter content 
 COPY .. /home/jovyan/work
-
-
-
 
 # Expose Jupyter Notebook port
 EXPOSE 8888
