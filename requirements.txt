@@ -1,0 +1,7 @@
+streamlit==1.30.*
+pygame_gui
+pandas
+numpy
+duckdb
+setuptools
+ydata-profiling

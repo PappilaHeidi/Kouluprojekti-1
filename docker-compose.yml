@@ -1,20 +1,26 @@
 version: "3"
 services:
-  iiwari-mariadb-server:
-    container_name: iiwari-mariadb-server2
-    image: mariadb:latest
-    ports:
-      - 3307:3306
-    environment:
-      - MYSQL_ROOT_PASSWORD=d41k4Duu
+
+    
+  streamlit:
+    build:
+      context: ./code/streamlit
+      dockerfile: Dockerfile
+    container_name: streamlit-image
     volumes:
-      - vol-iiwari-mariadb-data:/var/lib/mysql
+    - ./code:/streamlit
+    ports:
+    - 8501:8501
     networks:
       - jupyterhub-network
       
 
-  datascience-notebook:
-    build: ./code/jupyter_workshop/
+  jupyter-workshop:
+    image: jupyter-workshop
+    build: 
+      context: ./code/jupyter_workshop
+      dockerfile: Dockerfile
+    container_name: jupyter-workshop
     volumes:
       - ./code:/home/jovyan/work
     ports:
@@ -26,14 +32,8 @@ services:
     networks:
       - jupyterhub-network
 
-
     
+
 networks:
   jupyterhub-network:
     external: false
-volumes:
-  vol-iiwari-mariadb-data:
-    external: false
-
-  
-
