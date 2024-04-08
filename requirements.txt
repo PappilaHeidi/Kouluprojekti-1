@@ -5,4 +5,4 @@ numpy
 duckdb
 setuptools
 ydata-profiling
-heatmappy
+heatmappyi
