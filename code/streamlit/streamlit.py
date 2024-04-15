@@ -8,4 +8,3 @@ st.set_page_config(
 
 st.markdown("""
             # Tämä on esimerkki. Täydennetään lisää, kun projekti etenee! 😁""")
-

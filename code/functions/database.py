@@ -93,4 +93,5 @@ def drop_table(table_name, db_file):
     conn = duckdb.connect(database=db_file, read_only=False)
     # Execute the SQL statement to drop the table
     conn.execute(f'DROP TABLE IF EXISTS {table_name}')
+    print('Table dropped')
     conn.close()
