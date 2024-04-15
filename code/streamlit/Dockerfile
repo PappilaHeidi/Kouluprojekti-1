@@ -12,7 +12,6 @@ RUN python3 -m pip install --upgrade pip
 
 RUN python3 -m pip install -r requirements2.txt
 
-COPY .. /code/streamlit
 
 # Streamlit port
 EXPOSE 8501
