@@ -11,7 +11,6 @@ COPY ./requirements2.txt /code/streamlit/
 RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install -r requirements2.txt
 
-COPY .. /code/streamlit
 
 EXPOSE 8501
 
