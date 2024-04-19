@@ -1,7 +1,7 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title = "Keskivahavat Suorittajat", 
+    page_title = "Keskivahavat Suoritt", 
     page_icon="💪",
     layout = "wide"
 )
