@@ -9,6 +9,8 @@ services:
     container_name: streamlit-image
     volumes:
     - ./code/streamlit:/code/streamlit
+    - ./code/data:/data  # Lisätty rivi
+    - ./code:/app/code
     ports:
     - 8501:8501
     networks:
