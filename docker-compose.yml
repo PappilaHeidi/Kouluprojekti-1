@@ -10,7 +10,7 @@ services:
     volumes:
     - ./code/streamlit:/code/streamlit
     - ./code/data:/data  # Lisätty rivi
-    - ./code:/app/code
+    - ./code:/app/code  # lisätty rivi
     ports:
     - 8501:8501
     networks:

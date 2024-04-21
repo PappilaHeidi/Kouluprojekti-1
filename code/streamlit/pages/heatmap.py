@@ -6,67 +6,15 @@ import seaborn as sns
 import duckdb
 
 st.set_page_config(
-    page_title = "Heatmap",
+    page_title="Heatmap",
     page_icon="😅",
-    layout = "wide"
+    layout="wide"
 )
 
 st.title('Heidin GIGAHeatmap')
 
 st.markdown("""
             Kaupanmapin kuumat kohteet tulostettuna lämpimillä(Punainen 😡) ja kylmillä väreillä (Valkoinen 💀)""")
-
-st.markdown("""(Toimii nyt tällä hetkellä Heidin luomien kuvien kautta, ei siis sisällä kompleksia koodia) """)
-
-# Esimerkkipohja kuvatiedostojen poluille
-kellonajat = {
-    '9-11': 'heatmap-animaatio/heatmap-kuvat/heatmap_9_to_11.png',
-    '11-13': 'heatmap-animaatio/heatmap-kuvat/heatmap_11_to_13.png',
-    '13-15': 'heatmap-animaatio/heatmap-kuvat/heatmap_13_to_15.png',
-    '15-17': 'heatmap-animaatio/heatmap-kuvat/heatmap_15_to_17.png',
-    '17-19': 'heatmap-animaatio/heatmap-kuvat/heatmap_17_to_19.png',
-    '19-21': 'heatmap-animaatio/heatmap-kuvat/heatmap_19_to_21.png',
-    # Lisää kuvatiedostojen polut tähän
-}
-
-# Streamlit sovelluksen otsikko
-st.title('🔥 Kuumimmat alueet haluttujen aikavälien mukaan 🔥')
-
-# Valitse päivä dropdownista
-selected_date = st.selectbox('Valitse aikaväli:', list(kellonajat.keys()))
-
-# Näytä valittu kuva
-image_path = kellonajat[selected_date]
-image = plt.imread(image_path)
-
-st.image(image, caption=f'Kuva ajalta {selected_date}', use_column_width=True)
-
-
-# Esimerkkipohja kuvatiedostojen poluille
-päivät = {
-    'Maanantai': 'heatmap-animaatio/heatmap-viikonpäivä/heatmap_1Monday.png',
-    'Tiistai': 'heatmap-animaatio/heatmap-viikonpäivä/heatmap_2Tuesday.png',
-    'Keskiviikko': 'heatmap-animaatio/heatmap-viikonpäivä/heatmap_3Wednesday.png',
-    'Torstai': 'heatmap-animaatio/heatmap-viikonpäivä/heatmap_4Thursday.png',
-    'Perjantai': 'heatmap-animaatio/heatmap-viikonpäivä/heatmap_5Friday.png',
-    'Lauantai': 'heatmap-animaatio/heatmap-viikonpäivä/heatmap_6Saturday.png',
-    'Sunnuntai': 'heatmap-animaatio/heatmap-viikonpäivä/heatmap_7Sunday.png',
-    # Lisää kuvatiedostojen polut tähän
-}
-
-# Streamlit sovelluksen otsikko
-st.title('Päivän kuumimmat 🥵')
-
-# Valitse päivä dropdownista
-selected_date = st.selectbox('Valitse viikonpäivä:', list(päivät.keys()))
-
-# Näytä valittu kuva
-image_path = päivät[selected_date]
-image = plt.imread(image_path)
-
-st.image(image, caption=f'Viikonpäivä: {selected_date}', use_column_width=True)
-
-# Tähän joku giga magee koodi rimpsu mistä saadaan ite valita kellon ajat
 
 # Avataan tietokanta ja valitaan oikea datasetti
 def read_node(tbl: str, node_name: str, file: str):
@@ -93,6 +41,7 @@ df = load_data(file, tbl, node)
 # Pienennetään dataa siten, että otetaan kuvan ulkopuolella olevat datapisteet pois
 df_lim = df[(df['x'] >= 305) & (df['x'] <= 1250) & (df['y'] <= 560)]
 
+
 # Luo heatmap
 st.title('🔥 Kuumimmat alueet halutun aikavälin mukaan 🔥')
 
@@ -111,9 +60,31 @@ def load_image(path):
 img = load_image(IMG_PATH)
 img_height, img_width, _ = img.shape
 
-# Luo heatmap
+# Luo heatmap aikavälin perusteella
 fig, ax = plt.subplots(figsize=(13, 13))
-sns.kdeplot(data=selected_data, x='x', y='y', cmap="Reds", shade=True, bw=.15, alpha=1, ax=ax)
-plt.imshow(img, zorder=0, extent=[0, img_width, 0, img_height], alpha=1)
+hmax = sns.kdeplot(data=selected_data, x='x', y='y', cmap="Reds", shade=True, bw=.15, alpha=1, ax=ax)
+ax.imshow(img, zorder=0, extent=[0, img_width, 0, img_height], alpha=1)
 plt.title(f"Aikaväli {start_hour}:00-{end_hour}:00")
+plt.colorbar(hmax.collections[0], fraction=0.02)
+st.pyplot(fig)
+
+# Lisätään viikonpäivä-sarake
+df['timestamp'] = pd.to_datetime(df['timestamp'])
+df['weekday'] = df['timestamp'].dt.day_name()
+
+st.title('🥵 Viikonpäivän kuumimmat 🥵')
+
+# Valitse viikonpäivä
+selected_day = st.selectbox('Valitse viikonpäivä:', ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
+
+# Rajaa data valitulle viikonpäivälle
+df_lim = df[(df['x'] >= 305) & (df['x'] <= 1250) & (df['y'] <= 560)]
+df_lim_weekday = df_lim[df_lim['weekday'] == selected_day]
+
+
+# Luo heatmap viikonpäivän perusteella
+fig, ax = plt.subplots(figsize=(13, 13))
+hmax_weekday = sns.kdeplot(data=df_lim_weekday, x='x', y='y', cmap="Reds", shade=True, bw=.15, alpha=1)
+plt.imshow(img, zorder=0, extent=[0, img_width, 0, img_height], alpha=1)
+plt.title(selected_day)
 st.pyplot(fig)
