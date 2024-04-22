@@ -1,9 +1,10 @@
 import streamlit as st
-import duckdb as dd
+import duckdb
 import pandas as pd
 import numpy as np
 from PIL import Image, ImageDraw
 import matplotlib.pyplot as plt
+import os
 
 st.set_page_config(
     page_title = "Andreaksen GIGAkoodi kärryjenliikkeestä",
@@ -24,18 +25,22 @@ st.markdown("""
             * Tulostus valinnoista kaupan mappiin
             """)
 
-
-
-# Read data from DuckDB
-def read_node(tbl, node):
-    conn = dd.connect(database='Silver_SensorData')
-    query = "SELECT * FROM Silver_SensorData WHERE node_id = 3200"
-    df = conn.execute(query).fetch_df()
+# Luetaan data from duckdb.database
+def read_node(tbl:str, node_name:str, file: str):
+    con = duckdb.connect(database=file)
+    df = con.execute(f"SELECT * FROM {tbl} WHERE node_id = {node_name}").fetchdf()
+    con.close()
     return df
+
+# Laitetaan tiedostolle oikee path ja valitaan oikea node
+file = os.path.abspath(os.path.join(os.path.dirname(__file__),"..", "..", "..", "data", "duckdb.database"))
+tbl = "Silver_SensorData"
+node = "3200"
+df = read_node(tbl, node, file)
 
 # Function to draw data on the image
 def draw_on_image(df):
-    img_path = '../code/kauppa.jpg/'
+    img_path = 'kauppa.jpg'
     img = Image.open(img_path)
     draw = ImageDraw.Draw(img)
     
@@ -58,11 +63,6 @@ def draw_on_image(df):
 
 # Streamlit app
 st.title('Drawing Testfield Data')
-
-# Read data
-tbl = "Silver_SensorData"
-node = "3200"
-df = read_node(tbl, node)
 
 # Display data
 st.subheader('Data')
