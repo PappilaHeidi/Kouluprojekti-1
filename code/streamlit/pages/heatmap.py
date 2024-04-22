@@ -75,12 +75,22 @@ df['weekday'] = df['timestamp'].dt.day_name()
 st.title('🥵 Viikonpäivän kuumimmat 🥵')
 
 # Valitse viikonpäivä
+fin_to_eng_weekdays = {
+    'Maanantai': 'Monday',
+    'Tiistai': 'Tuesday',
+    'Keskiviikko': 'Wednesday',
+    'Torstai': 'Thursday',
+    'Perjantai': 'Friday',
+    'Lauantai': 'Saturday',
+    'Sunnuntai': 'Sunday'
+}
+
+# Valitse viikonpäivä
 selected_day = st.selectbox('Valitse viikonpäivä:', ['Maanantai', 'Tiistai', 'Keskiviikko', 'Torstai', 'Perjantai', 'Lauantai', 'Sunnuntai'])
+selected_day_eng = fin_to_eng_weekdays[selected_day]
 
 # Rajaa data valitulle viikonpäivälle
-df_lim = df[(df['x'] >= 305) & (df['x'] <= 1250) & (df['y'] <= 560)]
-df_lim_weekday = df_lim[df_lim['weekday'] == selected_day]
-
+df_lim_weekday = df[(df['x'] >= 305) & (df['x'] <= 1250) & (df['y'] <= 560) & (df['weekday'] == selected_day_eng)]
 
 # Luo heatmap viikonpäivän perusteella
 fig, ax = plt.subplots(figsize=(13, 13))
