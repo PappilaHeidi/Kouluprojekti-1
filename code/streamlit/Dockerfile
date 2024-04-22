@@ -17,5 +17,5 @@ RUN python3 -m pip install -r requirements2.txt
 EXPOSE 8501
 
 # Streamlit
-CMD ["streamlit", "run", "streamlit.py"]
+CMD ["streamlit", "run", "Mestarit.py"]
 
