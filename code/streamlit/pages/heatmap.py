@@ -75,7 +75,7 @@ df['weekday'] = df['timestamp'].dt.day_name()
 st.title('🥵 Viikonpäivän kuumimmat 🥵')
 
 # Valitse viikonpäivä
-selected_day = st.selectbox('Valitse viikonpäivä:', ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
+selected_day = st.selectbox('Valitse viikonpäivä:', ['Maanantai', 'Tiistai', 'Keskiviikko', 'Torstai', 'Perjantai', 'Lauantai', 'Sunnuntai'])
 
 # Rajaa data valitulle viikonpäivälle
 df_lim = df[(df['x'] >= 305) & (df['x'] <= 1250) & (df['y'] <= 560)]
