@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import duckdb
+import os
 
 st.set_page_config(
     page_title = "Säätietoa", 
@@ -11,6 +13,18 @@ st.set_page_config(
 def load_data(file_path):
     data = pd.read_csv(file_path)
     return data
+
+def read_node(tbl:str, node_name:str, file: str):
+    con = duckdb.connect(database=file)
+    df = con.execute(f"SELECT * FROM {tbl} WHERE node_id = {node_name}").fetchdf()
+    con.close()
+    return df
+
+# Lue asiakastiedot tietokannasta
+file = os.path.abspath(os.path.join(os.path.dirname(__file__),"..", "..", "..", "data", "duckdb.database"))
+tbl = "Silver_SensorData"
+node = "3200"
+customer_data = read_node(tbl, node, file)
 
 # Hae kuukaudet
 def get_months(data):
