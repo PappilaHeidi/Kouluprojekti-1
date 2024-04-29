@@ -8,7 +8,11 @@ services:
       dockerfile: Dockerfile
     container_name: streamlit-image
     volumes:
+<<<<<<< HEAD
     - ./code:/code  # lisätty rivi
+=======
+    - ./code:/code/
+>>>>>>> 33960f4 (streamlit/gigacharts sprint)
     ports:
     - 8501:8501
     networks:
