@@ -35,51 +35,75 @@ def get_months(data):
     data["Kuukausi"] = data["Kuukausi"].map(lambda x: months_names[x-1])
     return sorted(data["Kuukausi"].unique(), key=lambda x: months_names.index(x) if x != "Tammikuu-2020" else float("inf"))
 
-# Hae päivämäärät valitussa kuukaudessa
-def get_days_in_month(data, month):
-    return sorted(data[data["Kuukausi"] == month]["Päivä"].unique())
-
-# Hae sää valittuna päivänä
-def get_weather_for_day(data, month, day):
-    selected_day_data = data[(data["Kuukausi"] == month) & (data["Päivä"] == day)]
-    return selected_day_data[(selected_day_data["Aika [Paikallinen aika]"] >= "09:00") & (selected_day_data["Aika [Paikallinen aika]"] <= "21:00")]
-
 # Sovelluksen pääosa
 def main():
     st.title(":mostly_sunny: Säätieto historiaa :mostly_sunny:")
-
-    st.markdown(""" Säätietohistoriasta näemme, millainen sää on ollut silloin, kun kauppa on ollut auki kello 9-21 välillä.
-""")
     
+    st.markdown(""" **Valitsemalla "Kaikki päivät" näet valitun kuukauden sään keskiarvot. Valitsemalla "Yksittäinen päivä" näet tietyn päivän säätiedot.**
+    """)
+
     # Lataa data
     file_path = "yhdistetty_sää.csv"  # Korvaa tiedostonimi omalla CSV-tiedostonimelläsi
     data = load_data(file_path)
-    
+
+    # Muunna sarakkeet numeerisiksi
+    numeric_columns = ['Ilman lämpötila keskiarvo [°C]', 'Suhteellinen kosteus keskiarvo [%]', 'Sademäärä keskiarvo [mm]', 'Lumensyvyys keskiarvo [cm]', 'Keskituulen nopeus keskiarvo [m/s]']
+    data[numeric_columns] = data[numeric_columns].apply(pd.to_numeric, errors='coerce')
+
     # Hae kuukaudet dataframesta
     months = get_months(data)
-    
-    # Dropdown-valikko kuukausien valitsemiseksi
-    selected_month = st.selectbox("Valitse kuukausi", months)
-    
-    # Hae päivämäärät valitussa kuukaudessa
-    days = get_days_in_month(data, selected_month)
-    
-    # Dropdown-valikko päivämäärien valitsemiseksi valitussa kuukaudessa
-    selected_day = st.selectbox("Valitse päivä", days)
-    
-    # Näytä valitun päivän sää klo 9-21 välillä
-    selected_day_data = get_weather_for_day(data, selected_month, selected_day)
-    st.subheader(f"{selected_day}. {selected_month}")
-    
-    for index, row in selected_day_data.iterrows():
-        st.write(f"**{row['Aika [Paikallinen aika]']}**")
-        st.write(f"Lämpötila: {row['Ilman lämpötila keskiarvo [°C]']} °C :thermometer:")
-        st.write(f"Suhteellinen kosteus: {row['Suhteellinen kosteus keskiarvo [%]']} % :droplet:")
-        st.write(f"Lumensyvyys: {row['Lumensyvyys keskiarvo [cm]']} cm :snowflake:")
-        st.write(f"Keskituulen nopeus: {row['Keskituulen nopeus keskiarvo [m/s]']} m/s :wind_blowing_face:")
-        st.write(f"Sademäärä: {row['Sademäärä keskiarvo [mm]']} mm :rain_cloud:")
-        st.write("---")
 
-    
+    # Dropdown-valikko kuukausien valitsemiseksi
+    selected_month = st.selectbox("Valitse kuukausi:", months)
+
+    # Vaihtoehto kaikkien päivien tai oman päivän valitsemiseksi
+    selection_option = st.sidebar.radio("Valitse: ", ("Kaikki päivät", "Yksittäinen päivä"))
+
+    if selection_option == "Kaikki päivät":
+        st.markdown(""" **Tällä sivulla on tarkoitus näyttää valitun kuukauden asiakasmäärä, sekä saman kuukauden keskiarvot säästä. Tätä muokataan vielä...**
+        """)
+        st.markdown("""*Sarakkeen "Lumensyvyys" tiedot jätetään pois niiltä kuukaisilta, joissa se on 0 tai alle dataframessa*""")
+        # Näytä vain kuukauden kaikkien päivien keskiarvot
+        st.subheader(f"📊 {selected_month} sään keskiarvot: 📊")
+        st.write(" ")
+        month_data = data[data["Kuukausi"] == selected_month]
+        month_data_numeric = month_data.select_dtypes(include=[float])
+        month_mean = month_data_numeric.mean().round(2)
+
+        st.write(f"Lämpötilan keskiarvo: {month_mean['Ilman lämpötila keskiarvo [°C]']} °C 🌡️")
+        st.write(f"Suhteellisen kosteuden keskiarvo: {month_mean['Suhteellinen kosteus keskiarvo [%]']} % 💧")    
+        # Näytä "Lumensyvyys keskiarvo [cm]" -sarake vain tammikuulle, maaliskuulle, joulukuulle ja marraskuulle
+        if selected_month in ["Tammikuu-2019", "Maaliskuu-2019", "Joulukuu-2019", "Marraskuu-2019"]:
+            st.write(f"Lumensyvyyden keskiarvo: {month_mean['Lumensyvyys keskiarvo [cm]']} cm ❄️")   
+        st.write(f"Keskituulen nopeuden keskiarvo: {month_mean['Keskituulen nopeus keskiarvo [m/s]']} m/s 🌬️")
+        st.write(f"**Sademäärän keskiarvo:** {month_mean['Sademäärä keskiarvo [mm]']} mm 🌧️")
+
+    else:
+        # Näytä yksittäisen päivän tiedot
+        st.markdown(""" **Tällä sivulla on tarkoitus näyttää valitun päivän asiakasmäärä, sekä saman päivän sää. Tätä muokataan vielä...**
+        """)
+        st.markdown("""*Sarakkeen "Lumensyvyys" tiedot jätetään pois niiltä tunneilta, joissa se on 0 tai alle dataframessa.*""")
+        st.subheader("Yksittäisen päivän sää")
+        # Hae päivämäärät valitussa kuukaudessa
+        days = sorted(data[data["Kuukausi"] == selected_month]["Päivä"].unique())
+        selected_day = st.sidebar.selectbox("Valitse päivä:", days)  # Näytä valittu päivä
+        selected_day_data = data[(data["Kuukausi"] == selected_month) & (data["Päivä"] == selected_day)]
+        
+        # Näytä valitun päivän sää klo 9-21 välillä
+        with st.expander("Sää kaupan aukioloaikoina"):
+            selected_day_data_time = selected_day_data[
+                (selected_day_data["Aika [Paikallinen aika]"] >= "09:00") & 
+                (selected_day_data["Aika [Paikallinen aika]"] <= "21:00")
+            ]
+            for index, row in selected_day_data_time.iterrows():
+                st.write(f"**{row['Aika [Paikallinen aika]']}**")
+                st.write(f"Lämpötila: {row['Ilman lämpötila keskiarvo [°C]']} °C :thermometer:")
+                st.write(f"Suhteellinen kosteus: {row['Suhteellinen kosteus keskiarvo [%]']} % :droplet:")
+                lumensyvyys = float(row['Lumensyvyys keskiarvo [cm]'])
+                if lumensyvyys > 0:
+                    st.write(f"Lumensyvyys: {lumensyvyys} cm :snowflake:")
+                st.write(f"Keskituulen nopeus: {row['Keskituulen nopeus keskiarvo [m/s]']} m/s :wind_blowing_face:")
+                st.write(f"Sademäärä: {row['Sademäärä keskiarvo [mm]']} mm :rain_cloud:")
+
 if __name__ == "__main__":
     main()
