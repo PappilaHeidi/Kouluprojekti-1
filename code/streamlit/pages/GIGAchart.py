@@ -8,8 +8,7 @@ import datetime
 import pandas as pd
 import numpy as np
 
-<<<<<<< HEAD
-=======
+
 kuukaudet = [
     "Tammikuu",
     "Helmikuu",
@@ -24,7 +23,6 @@ kuukaudet = [
     "Marraskuu",
     "Joulukuu"
 ]
->>>>>>> 33960f4 (streamlit/gigacharts sprint)
 
 st.set_page_config(
     page_title = "Gigachart",

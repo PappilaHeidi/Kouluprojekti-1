@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 
 
-db_file = "/data/duckdb.database"
+db_file = "/code/data/duckdb.database"
 
 def fetch_nodes():
     con = dd.connect(database=db_file)
