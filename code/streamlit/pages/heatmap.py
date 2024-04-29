@@ -24,7 +24,7 @@ def read_node(tbl: str, node_name: str, file: str):
     return df
 
 # Määritä projektin juuripolku
-IMG_PATH = "/app/code/kauppa.jpg"
+IMG_PATH = "/code/kauppa.jpg"
 
 # Lataa data
 @st.cache_data()
@@ -32,7 +32,7 @@ def load_data(file: str, tbl: str, node: str):
     df = read_node(tbl, node, file)
     return df
 
-file = "/data/duckdb.database"
+file = "/code/data/duckdb.database"
 tbl = "Silver_SensorData"
 node = st.sidebar.selectbox("Valitse node:", ["3200", "3224", "3240", "42787", "45300", "51719", "51720", "51735", "51751", "51850", "51866", "51889", "51968", "51976", "51992", "52003", "52008", "52023", "52099", "52535", "53000", "53011", "53027", "53130", "53768", "53795", "53888", "53924", "53936", "54016", "64458"])
 

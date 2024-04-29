@@ -21,7 +21,7 @@ def read_node(tbl:str, node_name:str, file: str):
     return df
 
 # Lue asiakastiedot tietokannasta
-file = os.path.abspath(os.path.join(os.path.dirname(__file__),"..", "..", "..", "data", "duckdb.database"))
+file = "/code/data/duckdb.database"
 tbl = "Silver_SensorData"
 node = "3200"
 customer_data = read_node(tbl, node, file)
