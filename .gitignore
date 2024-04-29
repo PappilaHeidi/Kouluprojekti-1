@@ -262,4 +262,3 @@ $RECYCLE.BIN/
 !**/projekti1/initdb.sql
 !**/projekti1/createdb.sh
 !**/projekti1/populate-mariadb.sh
-streamlit
