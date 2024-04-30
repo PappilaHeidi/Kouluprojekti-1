@@ -164,7 +164,7 @@ def chart_df(df_start, df_end):
     
     # Create a new dataframe with the index numbers and the data
 
-    chart_data = pd.DataFrame({'day': index, 'kk1': data, 'kk2': data2})
+    chart_data = pd.DataFrame({'Päivät': index, 'kk1': data, 'kk2': data2})
 
 
     #new_df = new_df.drop_duplicates()
