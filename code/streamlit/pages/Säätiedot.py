@@ -1,37 +1,42 @@
 import streamlit as st
 import pandas as pd
-import duckdb
-import os
+import gigafunctions as giga
+import numpy as np
 
+# Asetetaan sivu
 st.set_page_config(
     page_title = "Säätietoa", 
     page_icon=":mostly_sunny:",
     layout = "wide"
 )
 
+st.markdown(
+    """
+    <style>
+    .center {
+        display: flex;
+        justify-content: center;
+    }
+    .big {
+        font-size: 32px;
+        margin-left: -300px; 
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Avataan data streamlittiin
 @st.cache_data
 def load_data(file_path):
     data = pd.read_csv(file_path)
     return data
 
-def read_node(tbl:str, node_name:str, file: str):
-    con = duckdb.connect(database=file)
-    df = con.execute(f"SELECT * FROM {tbl} WHERE node_id = {node_name}").fetchdf()
-    con.close()
-    return df
-
-# Lue asiakastiedot tietokannasta
-file = "/code/data/duckdb.database"
-tbl = "Silver_SensorData"
-node = "3200"
-customer_data = read_node(tbl, node, file)
-
-# Hae kuukaudet
+# Haetaan kuukaudet ja muutetaan ne nämän nimisiksi
 def get_months(data):
-    # Kuukausien nimet
     months_names = ["Tammikuu-2020", "Helmikuu", "Maaliskuu-2019", "Huhtikuu-2019", "Toukokuu-2019", "Kesäkuu-2019", "Heinäkuu-2019", "Elokuu-2019", "Syyskuu-2019", "Lokakuu-2019", "Marraskuu-2019", "Joulukuu-2019"]
     
-    # Muunna numerot kuukausien nimiksi ja järjestä ne
+    # Järjestetään kuukaudet niin, että tammikuu-2020 viimeisenä
     data["Kuukausi"] = data["Kuukausi"].map(lambda x: months_names[x-1])
     return sorted(data["Kuukausi"].unique(), key=lambda x: months_names.index(x) if x != "Tammikuu-2020" else float("inf"))
 
@@ -39,14 +44,16 @@ def get_months(data):
 def main():
     st.title(":mostly_sunny: Säätieto historiaa :mostly_sunny:")
     
-    st.markdown(""" **Valitsemalla "Kaikki päivät" näet valitun kuukauden sään keskiarvot. Valitsemalla "Yksittäinen päivä" näet tietyn päivän säätiedot.**
+    st.markdown(""" **Valitsemalla "Kaikki päivät" näet valitun kuukauden sään keskiarvot, sekä kuukauden asiakasmäärän. Valitsemalla "Yksittäinen päivä" näet tietyn päivän säätiedot, sekä sen päivän asiakasmäärän.**
     """)
 
-    # Lataa data
-    file_path = "yhdistetty_sää.csv"  # Korvaa tiedostonimi omalla CSV-tiedostonimelläsi
+    st.markdown("""*Sarakkeen "Lumensyvyys" tiedot jätetään pois niiltä kuukaisilta, joissa se on 0 tai alle dataframessa*""")
+
+    # Ladataan säätieto data
+    file_path = "yhdistetty_sää.csv"
     data = load_data(file_path)
 
-    # Muunna sarakkeet numeerisiksi
+    # Muunnetaan sarakkeet numeerisiksi niin voidaan saada sään keskiarvot
     numeric_columns = ['Ilman lämpötila keskiarvo [°C]', 'Suhteellinen kosteus keskiarvo [%]', 'Sademäärä keskiarvo [mm]', 'Lumensyvyys keskiarvo [cm]', 'Keskituulen nopeus keskiarvo [m/s]']
     data[numeric_columns] = data[numeric_columns].apply(pd.to_numeric, errors='coerce')
 
@@ -59,30 +66,59 @@ def main():
     # Vaihtoehto kaikkien päivien tai oman päivän valitsemiseksi
     selection_option = st.sidebar.radio("Valitse: ", ("Kaikki päivät", "Yksittäinen päivä"))
 
+    # Jos valitaan "Kaikki päivät" niin saadaan näkyviin vain kuukauden keskiarvot
     if selection_option == "Kaikki päivät":
-        st.markdown(""" **Tällä sivulla on tarkoitus näyttää valitun kuukauden asiakasmäärä, sekä saman kuukauden keskiarvot säästä. Tätä muokataan vielä...**
-        """)
-        st.markdown("""*Sarakkeen "Lumensyvyys" tiedot jätetään pois niiltä kuukaisilta, joissa se on 0 tai alle dataframessa*""")
-        # Näytä vain kuukauden kaikkien päivien keskiarvot
-        st.subheader(f"📊 {selected_month} sään keskiarvot: 📊")
         st.write(" ")
-        month_data = data[data["Kuukausi"] == selected_month]
-        month_data_numeric = month_data.select_dtypes(include=[float])
-        month_mean = month_data_numeric.mean().round(2)
+        st.markdown('<p class="center big"><b>📊 {} asiakasmäärä & sään keskiarvot: 📊</b></p>'.format(selected_month), unsafe_allow_html=True)
+        st.write(" ")
 
-        st.write(f"Lämpötilan keskiarvo: {month_mean['Ilman lämpötila keskiarvo [°C]']} °C 🌡️")
-        st.write(f"Suhteellisen kosteuden keskiarvo: {month_mean['Suhteellinen kosteus keskiarvo [%]']} % 💧")    
-        # Näytä "Lumensyvyys keskiarvo [cm]" -sarake vain tammikuulle, maaliskuulle, joulukuulle ja marraskuulle
-        if selected_month in ["Tammikuu-2019", "Maaliskuu-2019", "Joulukuu-2019", "Marraskuu-2019"]:
-            st.write(f"Lumensyvyyden keskiarvo: {month_mean['Lumensyvyys keskiarvo [cm]']} cm ❄️")   
-        st.write(f"Keskituulen nopeuden keskiarvo: {month_mean['Keskituulen nopeus keskiarvo [m/s]']} m/s 🌬️")
-        st.write(f"**Sademäärän keskiarvo:** {month_mean['Sademäärä keskiarvo [mm]']} mm 🌧️")
+        col = st.columns(2)
+
+        with col[1]:
+            month_data = data[data["Kuukausi"] == selected_month]
+            month_data_numeric = month_data.select_dtypes(include=[float])
+            month_mean = month_data_numeric.mean()
+
+            previous_month = months[months.index(selected_month) - 1]
+            previous_month_data = data[data["Kuukausi"] == previous_month]
+            previous_month_data_numeric = previous_month_data.select_dtypes(include=[float])
+            previous_month_mean = previous_month_data_numeric.mean()
+
+            temperature_change = round(month_mean['Ilman lämpötila keskiarvo [°C]'] - previous_month_mean['Ilman lämpötila keskiarvo [°C]'], 1)
+            humidity_change = round(month_mean['Suhteellinen kosteus keskiarvo [%]'] - previous_month_mean['Suhteellinen kosteus keskiarvo [%]'], 1)
+            snow_depth = round(month_mean['Lumensyvyys keskiarvo [cm]'] - previous_month_mean['Lumensyvyys keskiarvo [cm]'], 1)
+            rain_change = round(month_mean['Sademäärä keskiarvo [mm]'] - previous_month_mean['Sademäärä keskiarvo [mm]'], 2)
+            wind_change = round(month_mean['Keskituulen nopeus keskiarvo [m/s]'] - previous_month_mean['Keskituulen nopeus keskiarvo [m/s]'], 1)
+
+            st.metric("Lämpötilan keskiarvo", f"{np.around(month_mean['Ilman lämpötila keskiarvo [°C]'], 1)} °C", f"{temperature_change} °C")
+            st.metric("Suhteellisen kosteuden keskiarvo", f"{np.around(month_mean['Suhteellinen kosteus keskiarvo [%]'], 1)} %", f"{humidity_change} %")
+            st.metric("Sademäärän keskiarvo", f"{np.around(month_mean['Sademäärä keskiarvo [mm]'], 2)} mm", f"{rain_change} mm")   
+            st.metric("Keskituulen nopeuden keskiarvo", f"{np.around(month_mean['Keskituulen nopeus keskiarvo [m/s]'], 1)} m/s", f"{wind_change} m/s") 
+            # Jos kuukausi ei ole joku näistä niin lumensyvyys rivi jää pois
+            if selected_month in ["Tammikuu-2020", "Maaliskuu-2019", "Joulukuu-2019", "Marraskuu-2019"]:
+                st.metric("Lumensyvyyden keskiarvo", f"{np.around(month_mean['Lumensyvyys keskiarvo [cm]'], 1)} cm", f"{snow_depth} cm")   
+    
+        with col[0]:
+            month_customer_count = giga.count_paths(month_data)
+            st.metric(f"Kuukauden kokonais asiakasmäärä:", f"{month_customer_count}")
+            st.write("")
+            st.write("")
+            st.write("")
+            sorted_months = sorted(months, key=lambda x: (int(x.split('-')[-1]), months.index(x)))
+            if "Tammikuu-2020" in sorted_months:
+                sorted_months.remove("Tammikuu-2020")
+                sorted_months.append("Tammikuu-2020")
+                
+            customer_counts = [giga.count_paths(data[data["Kuukausi"] == month]) for month in sorted_months]
+            data = {'Kuukausi': sorted_months, 'Asiakasmäärä': customer_counts}
+            df = pd.DataFrame(data)
+            # Piirretään pylväskaavio kuukausien asiakasmääristä
+            st.bar_chart(df.set_index('Kuukausi'), use_container_width=True)
 
     else:
         # Näytä yksittäisen päivän tiedot
         st.markdown(""" **Tällä sivulla on tarkoitus näyttää valitun päivän asiakasmäärä, sekä saman päivän sää. Tätä muokataan vielä...**
         """)
-        st.markdown("""*Sarakkeen "Lumensyvyys" tiedot jätetään pois niiltä tunneilta, joissa se on 0 tai alle dataframessa.*""")
         st.subheader("Yksittäisen päivän sää")
         # Hae päivämäärät valitussa kuukaudessa
         days = sorted(data[data["Kuukausi"] == selected_month]["Päivä"].unique())
@@ -90,7 +126,7 @@ def main():
         selected_day_data = data[(data["Kuukausi"] == selected_month) & (data["Päivä"] == selected_day)]
         
         # Näytä valitun päivän sää klo 9-21 välillä
-        with st.expander("Sää kaupan aukioloaikoina"):
+        with st.expander("Täältä löytyy tarkempaa säätä"):
             selected_day_data_time = selected_day_data[
                 (selected_day_data["Aika [Paikallinen aika]"] >= "09:00") & 
                 (selected_day_data["Aika [Paikallinen aika]"] <= "21:00")
