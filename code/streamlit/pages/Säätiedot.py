@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import gigafunctions as giga
 import numpy as np
+import altair as alt
 
 # Asetetaan sivu
 st.set_page_config(
@@ -48,7 +49,7 @@ def main():
     st.markdown(""" **Valitsemalla "Kaikki päivät" näet valitun kuukauden sään keskiarvot, sekä kuukauden asiakasmäärän. Valitsemalla "Yksittäinen päivä" näet tietyn päivän säätiedot, sekä sen päivän asiakasmäärän.**
     """)
 
-    st.markdown("""*Sarakkeen "Lumensyvyys" tiedot jätetään pois niiltä kuukaisilta, joissa se on 0 tai alle dataframessa*""")
+    st.markdown("""*Sarakkeen "Lumensyvyys" tiedot jätetään pois niiltä kuukausilta, joissa se on 0 tai alle dataframessa*""")
 
     # Ladataan säätieto data
     file_path = "yhdistetty_sää.csv"
@@ -96,13 +97,13 @@ def main():
             wind_change = round(month_mean['Keskituulen nopeus keskiarvo [m/s]'] - previous_month_mean['Keskituulen nopeus keskiarvo [m/s]'], 1)
 
             # Näytetään nykyisen kuukauden tiedot, sekä yllä laskettu erotus + pyöristetään sopivaan lukuun
-            st.metric("Lämpötilan keskiarvo", f"{np.around(month_mean['Ilman lämpötila keskiarvo [°C]'], 1)} °C", f"{temperature_change} °C")
-            st.metric("Suhteellisen kosteuden keskiarvo", f"{np.around(month_mean['Suhteellinen kosteus keskiarvo [%]'], 1)} %", f"{humidity_change} %")
-            st.metric("Sademäärän keskiarvo", f"{np.around(month_mean['Sademäärä keskiarvo [mm]'], 2)} mm", f"{rain_change} mm")   
-            st.metric("Keskituulen nopeuden keskiarvo", f"{np.around(month_mean['Keskituulen nopeus keskiarvo [m/s]'], 1)} m/s", f"{wind_change} m/s") 
+            st.metric("Lämpötilan keskiarvo :thermometer:", f"{np.around(month_mean['Ilman lämpötila keskiarvo [°C]'], 1)} °C", f"{temperature_change} °C")
+            st.metric("Suhteellisen kosteuden keskiarvo :droplet:", f"{np.around(month_mean['Suhteellinen kosteus keskiarvo [%]'], 1)} %", f"{humidity_change} %")
+            st.metric("Sademäärän keskiarvo :rain_cloud:", f"{np.around(month_mean['Sademäärä keskiarvo [mm]'], 2)} mm", f"{rain_change} mm")   
+            st.metric("Keskituulen nopeuden keskiarvo :wind_blowing_face:", f"{np.around(month_mean['Keskituulen nopeus keskiarvo [m/s]'], 1)} m/s", f"{wind_change} m/s") 
             # Jos kuukausi ei ole joku näistä niin lumensyvyys rivi jää pois
             if selected_month in ["Tammikuu-2020", "Maaliskuu-2019", "Joulukuu-2019", "Marraskuu-2019"]:
-                st.metric("Lumensyvyyden keskiarvo", f"{np.around(month_mean['Lumensyvyys keskiarvo [cm]'], 1)} cm", f"{snow_depth} cm")   
+                st.metric("Lumensyvyyden keskiarvo :snowflake:", f"{np.around(month_mean['Lumensyvyys keskiarvo [cm]'], 1)} cm", f"{snow_depth} cm")   
     
         with col[0]:
             # Lasketaan kuukauden asiakasmäärä ja näytetään se metricin avulla
@@ -110,7 +111,7 @@ def main():
             # Lasketaan verrataan aiempaan kuukauteen
             previous_month_count = giga.count_paths(previous_month_data)
             month_dif = month_customer_count - previous_month_count
-            st.metric("Kuukauden kokonaisasiakasmäärä:", month_customer_count, month_dif)
+            st.metric("Kuukauden asiakasmäärä:", month_customer_count, month_dif)
             st.write("")
             st.write("")
 
@@ -126,25 +127,68 @@ def main():
             df["Kuukausi"] = pd.Categorical(df["Kuukausi"], categories=months_names, ordered=True)
             df = df.sort_values(by="Kuukausi")
 
-            # Luodaan pylväsdiagrammi
-            st.bar_chart(df.set_index('Kuukausi'), use_container_width=True)
+            st.write("*Valittu kuukausi pinkillä värillä*")
+            bars = alt.Chart(df).mark_bar().encode(
+            x='Kuukausi',
+            y='Asiakasmäärä',
+            color=alt.condition(
+                alt.datum.Kuukausi == selected_month,
+                alt.value('#FF91A4'),
+                alt.value('#4169E1') 
+            )
+        )
+            st.altair_chart(bars, use_container_width=True)
 
     else:
-        # Näytä yksittäisen päivän tiedot
-        st.markdown(""" **Tällä sivulla on tarkoitus näyttää valitun päivän asiakasmäärä, sekä saman päivän sää. Tätä muokataan vielä...**
-        """)
-        st.subheader("Yksittäisen päivän sää")
-        # Hae päivämäärät valitussa kuukaudessa
+        st.write(" ")
         days = sorted(data[data["Kuukausi"] == selected_month]["Päivä"].unique())
         selected_day = st.sidebar.selectbox("Valitse päivä:", days)  # Näytä valittu päivä
         selected_day_data = data[(data["Kuukausi"] == selected_month) & (data["Päivä"] == selected_day)]
+        st.markdown('<p class="center big"><b>📊 {}. {} asiakasmäärä & sään keskiarvot 📊</b></p>'.format(selected_day, selected_month), unsafe_allow_html=True)
+        st.write(" ")
+        col = st.columns(2)
+        # Hae päivämäärät valitussa kuukaudessa
         
-        # Näytä valitun päivän sää klo 9-21 välillä
-        with st.expander("Täältä löytyy tarkempaa säätä"):
-            selected_day_data_time = selected_day_data[
-                (selected_day_data["Aika [Paikallinen aika]"] >= "09:00") & 
-                (selected_day_data["Aika [Paikallinen aika]"] <= "21:00")
-            ]
+        with col[0]:
+            daily_customer_count = giga.count_paths(selected_day_data)
+            st.metric("Päivän asiakasmäärä:", daily_customer_count)
+
+        with col[1]:
+            # Lasketaan päivittäiset keskiarvot
+            daily_mean = selected_day_data.select_dtypes(include=[float]).mean()
+            previous_day_mean = data[(data["Kuukausi"] == selected_month) & (data["Päivä"] == selected_day - 1)]
+            if not previous_day_mean.empty:
+                previous_day_mean = previous_day_mean.select_dtypes(include=[float]).mean()
+                temperature_change = round(daily_mean['Ilman lämpötila keskiarvo [°C]'] - previous_day_mean['Ilman lämpötila keskiarvo [°C]'], 1)
+                humidity_change = round(daily_mean['Suhteellinen kosteus keskiarvo [%]'] - previous_day_mean['Suhteellinen kosteus keskiarvo [%]'], 1)
+                snow_depth = round(daily_mean['Lumensyvyys keskiarvo [cm]'] - previous_day_mean['Lumensyvyys keskiarvo [cm]'], 1)
+                rain_change = round(daily_mean['Sademäärä keskiarvo [mm]'] - previous_day_mean['Sademäärä keskiarvo [mm]'], 2)
+                wind_change = round(daily_mean['Keskituulen nopeus keskiarvo [m/s]'] - previous_day_mean['Keskituulen nopeus keskiarvo [m/s]'], 1)
+
+                st.metric("Lämpötilan keskiarvo :thermometer:", f"{np.around(daily_mean['Ilman lämpötila keskiarvo [°C]'], 1)} °C", f"{temperature_change} °C")
+                st.metric("Suhteellisen kosteuden keskiarvo :droplet:", f"{np.around(daily_mean['Suhteellinen kosteus keskiarvo [%]'], 1)} %", f"{humidity_change} %")
+                st.metric("Sademäärän keskiarvo :rain_cloud:", f"{np.around(daily_mean['Sademäärä keskiarvo [mm]'], 2)} mm", f"{rain_change} mm")
+                st.metric("Keskituulen nopeuden keskiarvo :wind_blowing_face:", f"{np.around(daily_mean['Keskituulen nopeus keskiarvo [m/s]'], 1)} m/s", f"{wind_change} m/s")
+                if selected_month in ["Tammikuu-2020", "Maaliskuu-2019", "Joulukuu-2019", "Marraskuu-2019"]:
+                    st.metric("Lumensyvyyden keskiarvo :snowflake:", f"{np.around(daily_mean['Lumensyvyys keskiarvo [cm]'], 1)} cm", f"{snow_depth} cm")
+            else:
+                st.metric("Lämpötilan keskiarvo :thermometer:", f"{np.around(daily_mean['Ilman lämpötila keskiarvo [°C]'], 1)} °C")
+                st.metric("Suhteellisen kosteuden keskiarvo :droplet:", f"{np.around(daily_mean['Suhteellinen kosteus keskiarvo [%]'], 1)} %")
+                st.metric("Sademäärän keskiarvo :rain_cloud:", f"{np.around(daily_mean['Sademäärä keskiarvo [mm]'], 2)} mm")
+                st.metric("Keskituulen nopeuden keskiarvo :wind_blowing_face:", f"{np.around(daily_mean['Keskituulen nopeus keskiarvo [m/s]'], 1)} m/s")
+                if selected_month in ["Tammikuu-2020", "Maaliskuu-2019", "Joulukuu-2019", "Marraskuu-2019"]:
+                    st.metric("Lumensyvyyden keskiarvo :snowflake:", f"{np.around(daily_mean['Lumensyvyys keskiarvo [cm]'], 1)} cm")
+
+            st.write("")
+            st.write("")
+            st.write("")
+            st.write("")
+            # Näytä valitun päivän sää klo 9-21 välillä
+        with st.expander("Täältä löytyy tarkempaa tietoa päivän säästä"):
+            st.write("*Täältä löytyy säätietoa 9-21 aikaväliltä.*")
+
+            selected_day_data_time = selected_day_data[(selected_day_data["Aika [Paikallinen aika]"] >= "09:00") & (selected_day_data["Aika [Paikallinen aika]"] <= "21:00")]
+            
             for index, row in selected_day_data_time.iterrows():
                 st.write(f"**{row['Aika [Paikallinen aika]']}**")
                 st.write(f"Lämpötila: {row['Ilman lämpötila keskiarvo [°C]']} °C :thermometer:")
