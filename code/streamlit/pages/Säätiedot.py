@@ -10,6 +10,7 @@ st.set_page_config(
     layout = "wide"
 )
 
+# Vähän tyyliä streamlittiin
 st.markdown(
     """
     <style>
@@ -69,27 +70,32 @@ def main():
     # Jos valitaan "Kaikki päivät" niin saadaan näkyviin vain kuukauden keskiarvot
     if selection_option == "Kaikki päivät":
         st.write(" ")
-        st.markdown('<p class="center big"><b>📊 {} asiakasmäärä & sään keskiarvot: 📊</b></p>'.format(selected_month), unsafe_allow_html=True)
+        st.markdown('<p class="center big"><b>📊 {} asiakasmäärä & sään keskiarvot 📊</b></p>'.format(selected_month), unsafe_allow_html=True)
         st.write(" ")
 
+        # Lisätään streamlittiin 2 saraketta
         col = st.columns(2)
 
         with col[1]:
+            # Otetaan kuukaudet ja lasketaan kuukausien keskiarvot
             month_data = data[data["Kuukausi"] == selected_month]
             month_data_numeric = month_data.select_dtypes(include=[float])
             month_mean = month_data_numeric.mean()
 
+            # Lasketaan aiempien kuukausien keskiarvot
             previous_month = months[months.index(selected_month) - 1]
             previous_month_data = data[data["Kuukausi"] == previous_month]
             previous_month_data_numeric = previous_month_data.select_dtypes(include=[float])
             previous_month_mean = previous_month_data_numeric.mean()
 
+            # Lasketaan erotus nykyisen ja aiemma kuukauden välillä
             temperature_change = round(month_mean['Ilman lämpötila keskiarvo [°C]'] - previous_month_mean['Ilman lämpötila keskiarvo [°C]'], 1)
             humidity_change = round(month_mean['Suhteellinen kosteus keskiarvo [%]'] - previous_month_mean['Suhteellinen kosteus keskiarvo [%]'], 1)
             snow_depth = round(month_mean['Lumensyvyys keskiarvo [cm]'] - previous_month_mean['Lumensyvyys keskiarvo [cm]'], 1)
             rain_change = round(month_mean['Sademäärä keskiarvo [mm]'] - previous_month_mean['Sademäärä keskiarvo [mm]'], 2)
             wind_change = round(month_mean['Keskituulen nopeus keskiarvo [m/s]'] - previous_month_mean['Keskituulen nopeus keskiarvo [m/s]'], 1)
 
+            # Näytetään nykyisen kuukauden tiedot, sekä yllä laskettu erotus + pyöristetään sopivaan lukuun
             st.metric("Lämpötilan keskiarvo", f"{np.around(month_mean['Ilman lämpötila keskiarvo [°C]'], 1)} °C", f"{temperature_change} °C")
             st.metric("Suhteellisen kosteuden keskiarvo", f"{np.around(month_mean['Suhteellinen kosteus keskiarvo [%]'], 1)} %", f"{humidity_change} %")
             st.metric("Sademäärän keskiarvo", f"{np.around(month_mean['Sademäärä keskiarvo [mm]'], 2)} mm", f"{rain_change} mm")   
@@ -99,20 +105,28 @@ def main():
                 st.metric("Lumensyvyyden keskiarvo", f"{np.around(month_mean['Lumensyvyys keskiarvo [cm]'], 1)} cm", f"{snow_depth} cm")   
     
         with col[0]:
+            # Lasketaan kuukauden asiakasmäärä ja näytetään se metricin avulla
             month_customer_count = giga.count_paths(month_data)
-            st.metric(f"Kuukauden kokonais asiakasmäärä:", f"{month_customer_count}")
+            # Lasketaan verrataan aiempaan kuukauteen
+            previous_month_count = giga.count_paths(previous_month_data)
+            month_dif = month_customer_count - previous_month_count
+            st.metric("Kuukauden kokonaisasiakasmäärä:", month_customer_count, month_dif)
             st.write("")
             st.write("")
-            st.write("")
-            sorted_months = sorted(months, key=lambda x: (int(x.split('-')[-1]), months.index(x)))
-            if "Tammikuu-2020" in sorted_months:
-                sorted_months.remove("Tammikuu-2020")
-                sorted_months.append("Tammikuu-2020")
-                
-            customer_counts = [giga.count_paths(data[data["Kuukausi"] == month]) for month in sorted_months]
-            data = {'Kuukausi': sorted_months, 'Asiakasmäärä': customer_counts}
+
+            # Kuukausien nimet ja lisätään asiakasmäärät oikeisiin kuukausiin
+            months_names = ["Maaliskuu-2019", "Huhtikuu-2019", "Toukokuu-2019", "Kesäkuu-2019", "Heinäkuu-2019", "Elokuu-2019", "Syyskuu-2019", "Lokakuu-2019", "Marraskuu-2019", "Joulukuu-2019", "Tammikuu-2020"]
+            month_customer_counts = [giga.count_paths(data[data["Kuukausi"] == month]) for month in months_names]
+
+            # Luodaan oma dataframe asiakasmäärille ja kuukausille
+            data = {'Kuukausi': months_names, 'Asiakasmäärä': month_customer_counts}
             df = pd.DataFrame(data)
-            # Piirretään pylväskaavio kuukausien asiakasmääristä
+
+            # Järjestetään ne oikein
+            df["Kuukausi"] = pd.Categorical(df["Kuukausi"], categories=months_names, ordered=True)
+            df = df.sort_values(by="Kuukausi")
+
+            # Luodaan pylväsdiagrammi
             st.bar_chart(df.set_index('Kuukausi'), use_container_width=True)
 
     else:
