@@ -63,15 +63,13 @@ def read_paths(df: pd.DataFrame):
         start_index = iloc_list[i]
         end_index = iloc_list[i+1]
 
-        #df = _path_check(df, start_index, end_index) #filtering
-
+        #all path samples that are < 150 or > 10000 rows, will be ignored
         if (len(df.loc[start_index:end_index]) > 150) and (len(df.loc[start_index:end_index]) < 10000): #filter out the impossible or incomplete customer paths. Short rows are indication of insufficient datasample
             df.loc[start_index:end_index, "paths"] = paths_values[i] #last index will be ignored since we cannot be certain of complete cart round
     
     #make multi-index df for easier query
     df.set_index(['paths', 'timestamp'], inplace=True)
 
-    #df = _filter(df) #lisäsuodatusta 
 
     return df
 

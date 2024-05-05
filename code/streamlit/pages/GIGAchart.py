@@ -46,6 +46,9 @@ if "kuukausivertailu" not in st.session_state:
 if "aikavali" not in st.session_state:
     st.session_state.aikavali = False
 
+if "yksittaiset_reitit" not in st.session_state:
+    st.session_state.yksittaiset_reitit = False
+
 # SIVUPALKKI
 with st.sidebar: 
     st.title('GIGAcharts 📈')
@@ -97,40 +100,46 @@ with st.sidebar:
             kk1 = kuukaudet[months[1]-1]
             kk2 = kuukaudet[months[0]-1]
 
+    if selected_radio=="Yksittäiset reitit":
+        st.session_state.yksittaiset_reitit = True
+
 
 # PÄÄSIVU VASEN
 with col[0]:
+    if selected_radio == "Määritä oma aikaväli" and st.session_state.aikavali:
+        st.markdown("#### Kierrokset")
+        st.metric(label="Yhteensä ", value=f"{path_amount} kpl")
+        st.metric(label="joku", value="24")
+
     if selected_radio=="Kuukausivertailu" and st.session_state.kuukausivertailu:
         st.markdown("#### Kierrokset")
         st.metric(label=kk1, value=f"{path_amount1} kpl")
         st.metric(label=kk2, value=f"{path_amount2} kpl", delta=f"{np.round(((path_amount2-path_amount1)/path_amount1 * 100))} %")
 
-    if selected_radio == "Määritä oma aikaväli" and st.session_state.aikavali:
-        st.metric(label="Yhteensä ", value=f"{path_amount} kpl")
-        st.metric(label="Kierroksen keskiarvo", value="24")
-        
-            
 
 
 # PÄÄSIVU KESKI
 with col[1]:
-
+    
     if selected_radio == "Määritä oma aikaväli" and st.session_state.aikavali:
-        if len(selected_dates) == 1:
-            st.error("Valitse päättymispäivä")
-        else:
-            #ei piirretä tähän radioon
-            st.image(giga.draw(df_plot))
-            #heatmap = plotlit.make_heatmap(df_plot, 'timestamp', 'timestamp', '', 'blues')
-            #st.altair_chart(heatmap, use_container_width=True)
+        #ei piirretä tähän radioon
+        st.image(giga.draw(df_plot))
+        st.write("Linechartteja: volyymi(liikenne), asiakkaiden määrä/pvm, säätiedot")
+        #heatmap = plotlit.make_heatmap(df_plot, 'timestamp', 'timestamp', '', 'blues')
+        #st.altair_chart(heatmap, use_container_width=True)
     
     if selected_radio == "Kuukausivertailu" and st.session_state.kuukausivertailu:
         chart_data = giga.chart_df(df_start, df_end)
         st.area_chart(chart_data, x="Päivät", y=['kk1','kk2'])
 
+    if selected_radio == "Yksittäiset reitit" and st.session_state.yksittaiset_reitit:
+        st.write("vapaa reittien plottailu pvm ja noden mukaan")
 
 #PÄÄSIVU OIKEA
 with col[2]:
+    if selected_radio == "Määritä oma aikaväli" and st.session_state.aikavali:
+        st.write("dataframe ja about")
+
     if selected_radio == "Kuukausivertailu" and st.session_state.kuukausivertailu:
         st.markdown('#### Asiakasmäärät')
 
@@ -156,9 +165,9 @@ with col[2]:
                         )}
                     )
         
-        with st.expander('About', expanded=True):
+        with st.expander('Lisätietoja', expanded=True):
             st.write('''
-                - Data: [U.S. Census Bureau](<https://www.census.gov/data/datasets/time-series/demo/popest/2010s-state-total.html>).
-                - :orange[**Gains/Losses**]: states with high inbound/ outbound migration for selected year
-                - :orange[**States Migration**]: percentage of states with annual inbound/ outbound migration > 50,000
+                - Data: [Iiwari Tracking Solutions](<https://www.iiwari.com/>).
+                - :orange[**Kierrokset**]: Kärryillä kuljetut asiakkaiden kierrosten määrät kaupan sisällä / valittu kuukausi
+                - :orange[**Asiakasmäärät**]: Asiakasmäärien vertailu kuukausittain. Päivät vastaavat samoja kuukauden päiviä
                 ''')
