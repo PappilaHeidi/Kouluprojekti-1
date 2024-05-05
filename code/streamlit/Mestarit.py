@@ -1,19 +1,20 @@
 import streamlit as st
+import base64
 
 st.set_page_config(
     page_title = "Keskivahavat Suorittajat", 
-    page_icon="💪",
+    page_icon="💪🏼",
     layout = "wide"
 )
 
-st.title('Keskivahavat Suorittajat')
+st.title('✨ Keskivahavat Suorittajat ✨')
 
 st.image('5_gubbee.jpg', caption='Me ollaan Suorittajii')
 st.write("---")
 
 st.header('Linkit:')
 st.link_button("Rojektin Gitlab", "https://gitlab.dclabra.fi/andreaskon/projektiopinnot-1-datan-hallinta-ttm23sai")
-st.link_button("Rojetktin Blogi", "https://gitlab.dclabra.fi/wiki/F_wwWScxRwi_Hn0esldLIw?view")
+st.link_button("Rojektin Blogi", "https://gitlab.dclabra.fi/wiki/F_wwWScxRwi_Hn0esldLIw?view")
 st.write("---")
 
 st.markdown("""
