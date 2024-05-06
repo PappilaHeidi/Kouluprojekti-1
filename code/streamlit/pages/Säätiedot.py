@@ -105,6 +105,7 @@ def main():
             if selected_month in ["Tammikuu-2020", "Maaliskuu-2019", "Joulukuu-2019", "Marraskuu-2019"]:
                 st.metric("Lumensyvyyden keskiarvo :snowflake:", f"{np.around(month_mean['Lumensyvyys keskiarvo [cm]'], 1)} cm", f"{snow_depth} cm")   
     
+        # Täällä lasketaan kuukausien asiakasmäärät ja luodaan kuvaaja niistä
         with col[0]:
             # Lasketaan kuukauden asiakasmäärä ja näytetään se metricin avulla
             month_customer_count = giga.count_paths(month_data)
@@ -149,6 +150,7 @@ def main():
         col = st.columns(2)
         # Hae päivämäärät valitussa kuukaudessa
         
+        # Tänne olisi tarkoitus saada päivittäinen asiakasmäärä!
         with col[0]:
             daily_customer_count = giga.count_paths(selected_day_data)
             st.metric("Päivän asiakasmäärä:", daily_customer_count)
