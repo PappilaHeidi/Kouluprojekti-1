@@ -15,6 +15,8 @@ st.write("---")
 st.header('Linkit:')
 st.link_button("Rojektin Gitlab", "https://gitlab.dclabra.fi/andreaskon/projektiopinnot-1-datan-hallinta-ttm23sai")
 st.link_button("Rojektin Blogi", "https://gitlab.dclabra.fi/wiki/F_wwWScxRwi_Hn0esldLIw?view")
+# Käytä iframea upottaaksesi sivusto Streamlittiin
+st.markdown('<iframe src="https://app.clockify.me/shared/6638f3a1963af9639f17dfb0" width="1000" height="600"></iframe>', unsafe_allow_html=True)
 st.write("---")
 
 st.markdown("""

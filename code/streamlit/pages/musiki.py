@@ -27,9 +27,9 @@ if not st.session_state.button_clicked:
         audio_data = load_audio(audio_path)
         gif_data = load_gif(gif_path)
 
-        # Display GIF and start audio playback
+        # Display GIF and start audio playback with autoplay
         st.image(gif_data, caption='GIGAMODE ACTIVATED', use_column_width=True)
-        st.audio(audio_data, format='audio/mp3', start_time=0)
+        st.audio(audio_data, format='audio/mp3', start_time=1, autoplay=True)  # Autoplay enabled
 
         # Hide "Enable GIGAMODE" button
         st.session_state.button_clicked = True
@@ -40,6 +40,3 @@ if st.session_state.button_clicked:
     if st.button('Back to PLEBMODE...'):
         st.session_state.button_clicked = False
         st.rerun()
-
-# Aloitus nappulassa bugi, se ei poistu vaikka sen pitäisi
-# Ääni ei käynnisty painaessa "Enable GIGAMODE" -nappulaa
