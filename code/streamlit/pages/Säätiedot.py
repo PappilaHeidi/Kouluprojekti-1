@@ -156,9 +156,9 @@ def main():
         with col[1]:
             # Lasketaan päivittäiset keskiarvot
             daily_mean = selected_day_data.select_dtypes(include=[float]).mean()
-            previous_day_mean = data[(data["Kuukausi"] == selected_month) & (data["Päivä"] == selected_day - 1)]
-            if not previous_day_mean.empty:
-                previous_day_mean = previous_day_mean.select_dtypes(include=[float]).mean()
+            previous_day_data = data[(data["Kuukausi"] == selected_month) & (data["Päivä"] == selected_day - 1)]
+            if not previous_day_data.empty:
+                previous_day_mean = previous_day_data.select_dtypes(include=[float]).mean()
                 temperature_change = round(daily_mean['Ilman lämpötila keskiarvo [°C]'] - previous_day_mean['Ilman lämpötila keskiarvo [°C]'], 1)
                 humidity_change = round(daily_mean['Suhteellinen kosteus keskiarvo [%]'] - previous_day_mean['Suhteellinen kosteus keskiarvo [%]'], 1)
                 snow_depth = round(daily_mean['Lumensyvyys keskiarvo [cm]'] - previous_day_mean['Lumensyvyys keskiarvo [cm]'], 1)
