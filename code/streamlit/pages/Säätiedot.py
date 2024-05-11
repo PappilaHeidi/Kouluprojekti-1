@@ -138,6 +138,9 @@ def main():
         st.write(" ")
         col = st.columns(2)
         with col[0]:
+            daily_customer_count = giga.count_paths(selected_day_data)
+            st.metric("Päivän asiakasmäärä:", daily_customer_count)
+            #st.write(daily_customer_count)
             daily_customer_count = giga.count_paths(selected_day_data) 
             previous_day_data = data[(data["Kuukausi"] == selected_month) & (data["Päivä"] == selected_day - 1)]
             previous_day_count = giga.count_paths(previous_day_data)
