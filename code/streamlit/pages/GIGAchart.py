@@ -9,6 +9,9 @@ import pandas as pd
 import numpy as np
 
 
+
+
+
 kuukaudet = [
     "Tammikuu",
     "Helmikuu",
@@ -36,6 +39,11 @@ st.sidebar.markdown("Sivupalkki")
 tbl = "Silver_SensorData"
 col = st.columns((1.5, 10.5, 3.3), gap='medium')
 
+def available_nodes(): #joku häikkä nodevalinnassa. Varmaankin session-state ja sorttaus. Jep sorttaus oli!
+    nodes = giga.fetch_nodes() #fetch all nodes in db
+    node_list = sorted([int(str(x[0])) for x in nodes])
+    return node_list
+
 if "visibility" not in st.session_state:
     st.session_state.visibility = "hidden"
     st.session_state.disabled = True
@@ -52,9 +60,7 @@ if "yksittaiset_reitit" not in st.session_state:
 # SIVUPALKKI
 with st.sidebar: 
     st.title('GIGAcharts 📈')
-    nodes = giga.fetch_nodes() #fetch all nodes in db
-    node_list = nodes[0]
-    selected_nodes = st.selectbox('Select a node', node_list)
+    selected_nodes = st.selectbox('Select a node', available_nodes())
     df = giga.read_db_to_df(tbl, selected_nodes)
     min_date = df['timestamp'].min()
     max_date = df['timestamp'].max()
@@ -90,15 +96,19 @@ with st.sidebar:
             st.session_state.kuukausivertailu = True
             df_start = df[(df['timestamp'].dt.year == selected_first_year) & (df['timestamp'].dt.month == selected_first_month)]
             df_end = df[(df['timestamp'].dt.year == selected_compared_year) & (df['timestamp'].dt.month == selected_compared_month)]
-            df_start = giga.read_paths(df_start)
-            df_end = giga.read_paths(df_end)
+            try:
+                df_start = giga.read_paths(df_start)
+                df_end = giga.read_paths(df_end)
+            except:
+                st.error("Reittitietoja ei pystytty hakemaan")
+
             path_amount1 = giga.count_paths(df_start)
             path_amount2 = giga.count_paths(df_end)
             df_start.index = df_start.index.set_levels([df_start.index.levels[0], pd.to_datetime(df_start.index.levels[1])])
             df_end.index = df_end.index.set_levels([df_end.index.levels[0], pd.to_datetime(df_end.index.levels[1])])
             months = list(set(df_end.index.get_level_values(1).month.tolist() + df_start.index.get_level_values(1).month.tolist()))
-            kk1 = kuukaudet[months[1]-1]
-            kk2 = kuukaudet[months[0]-1]
+            kk1 = kuukaudet[months[0]-1]
+            kk2 = kuukaudet[months[1]-1]
 
     if selected_radio=="Yksittäiset reitit":
         st.session_state.yksittaiset_reitit = True

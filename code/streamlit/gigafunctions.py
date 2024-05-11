@@ -5,8 +5,6 @@ from PIL import Image, ImageDraw
 from datetime import datetime, timedelta
 
 
-
-
 db_file = "/code/data/duckdb.database"
 
 def fetch_nodes():
@@ -33,9 +31,17 @@ def read_db_to_df(tbl: str, node_name: str = None):
         return df
     else:
         con = dd.connect(database=db_file)
-        df = con.sql(f"SELECT * FROM {tbl}").df()
+        #ORDER BY vaaditaan jotta esim reittilaskenta ei mene solmuun
+        df = con.sql(f"SELECT * FROM {tbl} ORDER BY node_id").df() 
         con.close()
         return df
+    
+def _cash_pipe(df):
+    charging_station1 = df[df['x'].between(-150, 1600) & (df['y'] > 2900)]
+    charging_station2 = df[(df['y']> 2000) & df['x'].between(-150, 800)]
+    # Poistetaan outlierit
+    df = df[~df.index.isin(charging_station1.index) & ~df.index.isin(charging_station2.index)]
+    return df
     
 def read_paths(df: pd.DataFrame):
     '''
@@ -55,34 +61,81 @@ def read_paths(df: pd.DataFrame):
     #this is for finding the carts that are resting after a round trip in shop. They rest at either charging stations or out of the shop before they are taken in again
     iloc_list = []
     for index, value in df.iterrows():
-        if (value['time_diff'] > pd.Timedelta(minutes=6)):
+        if (value['time_diff'] > pd.Timedelta(minutes=4)):
             iloc_list.append(index)
     paths_values = np.arange(0, len(iloc_list), 1) #will be used for multi-index value naming and finding new trips
     
     for i in range(len(iloc_list)-1): #needs to be iterated so we can use between values of iloc1-iloc2-ilocn and assign path values from list
         start_index = iloc_list[i]
-        end_index = iloc_list[i+1]
+        end_index = (iloc_list[i+1] -1) 
 
         #all path samples that are < 150 or > 10000 rows, will be ignored
-        if (len(df.loc[start_index:end_index]) > 150) and (len(df.loc[start_index:end_index]) < 10000): #filter out the impossible or incomplete customer paths. Short rows are indication of insufficient datasample
+        if (len(df.loc[start_index:end_index]) > 100) and (len(df.loc[start_index:end_index]) < 10000): #filter out the impossible or incomplete customer paths. Short rows are indication of insufficient datasample
             df.loc[start_index:end_index, "paths"] = paths_values[i] #last index will be ignored since we cannot be certain of complete cart round
     
     #make multi-index df for easier query
     df.set_index(['paths', 'timestamp'], inplace=True)
-
 
     return df
 
 def count_paths(df: pd.DataFrame):
     '''
     Laskee reittien määrän
+    Hyväksyy read_paths() palauttaman dataframen tai
+    Heidin notaatiolla olevan dataframen, missä 
+    'Vuosi, 'Kuukausi', 'Päivä', 'Aika [Paikallinen aika]'
+    on sarakkeissa.
     Args:
         df (pd.DataFrame): df
 
     Returns:
         int: reittien määrä
     '''
-    return len(df.groupby(level=0))
+
+    if 'paths' in df.index.names:
+        return len(df.groupby(level=0))
+    elif 'Vuosi' and 'Kuukausi' and 'Päivä' in df.columns:
+        #read from db
+        db_df = read_db_to_df('Silver_SensorData') #muista poistaa node
+        #db_df['timestamp'] = pd.to_datetime(db_df['timestamp'])
+        #suodata gold-taulusta latausasemat
+        db_df = _cash_pipe(db_df)
+        #modify columns
+        month_mapping = {
+        'Tammikuu-2019': 1,
+        'Helmikuu-2019': 2,
+        'Maaliskuu-2019': 3,
+        'Huhtikuu-2019': 4,
+        'Toukokuu-2019': 5,
+        'Kesäkuu-2019': 6,
+        'Heinäkuu-2019': 7,
+        'Elokuu-2019': 8,
+        'Syyskuu-2019': 9,
+        'Lokakuu-2019': 10,
+        'Marraskuu-2019': 11,
+        'Joulukuu-2019': 12,
+        'Tammikuu-2020': 1
+}
+        df['Kuukausi'] = df['Kuukausi'].map(month_mapping)
+        df = df.rename(columns={'Vuosi': 'year', 'Kuukausi': 'month', 'Päivä': 'day', 'Aika [Paikallinen aika]': 'time'})
+        
+        #parse dates
+        df['time'] = df['time'] + ':00'
+        df['datetime'] = pd.to_datetime(df[['year', 'month', 'day']])
+        df['datetime'] = df['datetime'] + pd.to_timedelta(df['time'])
+        min_time_df = df['datetime'].min()
+        max_time_df = df['datetime'].max()
+        #mask = (db_df['timestamp'] >= min_time_df) & (db_df.loc['timestamp'] <= max_time_df)
+        db_df = db_df.loc[(db_df['timestamp'] >= min_time_df) & (db_df['timestamp'] <= max_time_df)]
+
+        #debug
+        #df_test = db_df[(db_df['timestamp'] >= '2019-03-20') & (db_df['timestamp'] <= '2019-03-21')]
+        
+        try:
+            return count_paths(read_paths(db_df)) +1 # +1 offset, ts. en kerennyt korjaamaan funktiota niin että otetaan viimeinen reitti-indexi huomioon
+        except KeyError:
+            print("Ei polkuja")
+            return 0
 
 def _path_check(df: pd.DataFrame, istart, iend): #checks for inconsistent paths and removes the rows for easier paths finding later
     '''
@@ -125,11 +178,10 @@ def _path_check(df: pd.DataFrame, istart, iend): #checks for inconsistent paths 
 
     return df
 
-
 def chart_df(df_start, df_end):
     '''
     Yhdistää kaksi dataframea yhteen area_chart plottausta varten.
-    Vaatii reittiflagit. Käytä dataframet ensiksi "read_flags()"-funktion
+    Vaatii reittiflagit. Käytä dataframet ensiksi "read_paths()"-funktion
     kautta.
     Args:
         df_start (pd.DataFrame): df
@@ -152,7 +204,6 @@ def chart_df(df_start, df_end):
     df2 = df2.reset_index()
     df2['timestamp'] = pd.to_datetime(df2['timestamp'])
     
-
     # Create a dataframe with index numbers from 1-31
     index = pd.date_range(start='2023-01-01', end='2023-01-31', freq='D').strftime('%d').astype(int)
 
@@ -161,15 +212,12 @@ def chart_df(df_start, df_end):
     data2 = df2.groupby(df2['timestamp'].dt.day)['paths'].sum().reindex(index=index, fill_value=0)
     
     # Create a new dataframe with the index numbers and the data
-
     chart_data = pd.DataFrame({'Päivät': index, 'kk1': data, 'kk2': data2})
-
 
     #new_df = new_df.drop_duplicates()
     #chart_data = pd.concat([test, test2], ignore_index=True)
     
     return chart_data
-
 
 def draw(df, show_calibration_data = None):
     # Get image size with this method
@@ -199,7 +247,6 @@ def draw(df, show_calibration_data = None):
     x_scale = 1166/10500
     y_scale = 563/5150
 
-
     def scale_coords(x,y):
         xr = (x*x_scale)+x_offset
         yr = (y*y_scale)+y_offset
@@ -207,8 +254,6 @@ def draw(df, show_calibration_data = None):
 
     for index, row in df.iterrows():
         (x,y) = scale_coords(row.x, row.y)
-        #test
-        
         d.rectangle((x,y,x+2,y+2), fill=(int(row.node_id)%255,0,0,20))
     
     def show_cal_data():

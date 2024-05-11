@@ -143,32 +143,32 @@ def main():
             )
                 st.altair_chart(bars, use_container_width=True)
 
-        else:
-            st.write(" ")
-            days = sorted(data[data["Kuukausi"] == selected_month]["Päivä"].unique())
-            selected_day = st.sidebar.selectbox("Valitse päivä:", days)  # Näytä valittu päivä
-            selected_day_data = data[(data["Kuukausi"] == selected_month) & (data["Päivä"] == selected_day)]
-            st.markdown('<p class="center big"><b>📊 {}. {} asiakasmäärä & sään keskiarvot 📊</b></p>'.format(selected_day, selected_month), unsafe_allow_html=True)
-            st.write(" ")
-            col = st.columns(2)
-            # Hae päivämäärät valitussa kuukaudessa
-            
-            # Tänne olisi tarkoitus saada päivittäinen asiakasmäärä!
-            with col[0]:
-                daily_customer_count = giga.count_daily_customers(selected_day_data)
-                st.metric("Päivän asiakasmäärä:", daily_customer_count)
-
-            with col[1]:
-                # Lasketaan päivittäiset keskiarvot
-                daily_mean = selected_day_data.select_dtypes(include=[float]).mean()
-                previous_day_data = data[(data["Kuukausi"] == selected_month) & (data["Päivä"] == selected_day - 1)]
-                if not previous_day_data.empty:
-                    previous_day_mean = previous_day_data.select_dtypes(include=[float]).mean()
-                    temperature_change = round(daily_mean['Ilman lämpötila keskiarvo [°C]'] - previous_day_mean['Ilman lämpötila keskiarvo [°C]'], 1)
-                    humidity_change = round(daily_mean['Suhteellinen kosteus keskiarvo [%]'] - previous_day_mean['Suhteellinen kosteus keskiarvo [%]'], 1)
-                    snow_depth = round(daily_mean['Lumensyvyys keskiarvo [cm]'] - previous_day_mean['Lumensyvyys keskiarvo [cm]'], 1)
-                    rain_change = round(daily_mean['Sademäärä keskiarvo [mm]'] - previous_day_mean['Sademäärä keskiarvo [mm]'], 2)
-                    wind_change = round(daily_mean['Keskituulen nopeus keskiarvo [m/s]'] - previous_day_mean['Keskituulen nopeus keskiarvo [m/s]'], 1)
+    else:
+        st.write(" ")
+        days = sorted(data[data["Kuukausi"] == selected_month]["Päivä"].unique())
+        selected_day = st.sidebar.selectbox("Valitse päivä:", days)  # Näytä valittu päivä
+        selected_day_data = data[(data["Kuukausi"] == selected_month) & (data["Päivä"] == selected_day)]
+        st.markdown('<p class="center big"><b>📊 {}. {} asiakasmäärä & sään keskiarvot 📊</b></p>'.format(selected_day, selected_month), unsafe_allow_html=True)
+        st.write(" ")
+        col = st.columns(2)
+        # Hae päivämäärät valitussa kuukaudessa
+        
+        # Tänne olisi tarkoitus saada päivittäinen asiakasmäärä!
+        with col[0]:
+            daily_customer_count = giga.count_paths(selected_day_data)
+            st.metric("Päivän asiakasmäärä:", daily_customer_count)
+            #st.write(daily_customer_count)
+        with col[1]:
+            # Lasketaan päivittäiset keskiarvot
+            daily_mean = selected_day_data.select_dtypes(include=[float]).mean()
+            previous_day_data = data[(data["Kuukausi"] == selected_month) & (data["Päivä"] == selected_day - 1)]
+            if not previous_day_data.empty:
+                previous_day_mean = previous_day_data.select_dtypes(include=[float]).mean()
+                temperature_change = round(daily_mean['Ilman lämpötila keskiarvo [°C]'] - previous_day_mean['Ilman lämpötila keskiarvo [°C]'], 1)
+                humidity_change = round(daily_mean['Suhteellinen kosteus keskiarvo [%]'] - previous_day_mean['Suhteellinen kosteus keskiarvo [%]'], 1)
+                snow_depth = round(daily_mean['Lumensyvyys keskiarvo [cm]'] - previous_day_mean['Lumensyvyys keskiarvo [cm]'], 1)
+                rain_change = round(daily_mean['Sademäärä keskiarvo [mm]'] - previous_day_mean['Sademäärä keskiarvo [mm]'], 2)
+                wind_change = round(daily_mean['Keskituulen nopeus keskiarvo [m/s]'] - previous_day_mean['Keskituulen nopeus keskiarvo [m/s]'], 1)
 
                     st.metric("Lämpötilan keskiarvo :thermometer:", f"{np.around(daily_mean['Ilman lämpötila keskiarvo [°C]'], 1)} °C", f"{temperature_change} °C")
                     st.metric("Suhteellisen kosteuden keskiarvo :droplet:", f"{np.around(daily_mean['Suhteellinen kosteus keskiarvo [%]'], 1)} %", f"{humidity_change} %")
