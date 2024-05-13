@@ -5,6 +5,7 @@ from PIL import Image, ImageDraw
 from datetime import datetime, timedelta
 
 
+
 db_file = "/code/data/duckdb.database"
 
 def fetch_nodes():
@@ -42,12 +43,20 @@ def read_db_to_df(tbl: str, node_name: str=None):
         con.close()
         return df
     
-def _cash_pipe(df):
-    charging_station1 = df[df['x'].between(-150, 1600) & (df['y'] > 2900)]
-    charging_station2 = df[(df['y']> 2000) & df['x'].between(-150, 800)]
-    # Poistetaan outlierit
-    df = df[~df.index.isin(charging_station1.index) & ~df.index.isin(charging_station2.index)]
-    return df
+def _cash_pipe(df, area: str='inshop'):
+    if area=='charging':
+        #latausasemat: latauksessa olevat
+        charging_station1 = df[df['x'].between(-350, 800) & (df['y'] > 2200)]
+        charging_station2 = df[(df['y']> 2900) & df['x'].between(-350, 1500)]
+        # Poistetaan
+        df = df[df.index.isin(charging_station1.index) | df.index.isin(charging_station2.index)]
+        return df
+    elif area=='inshop':
+        #ei latauksessa olevat pisteet
+        charging_station1 = df[df['x'].between(-150, 1600) & (df['y'] > 2900)]
+        charging_station2 = df[(df['y']> 2000) & df['x'].between(-150, 800)]
+        df = df[~df.index.isin(charging_station1.index) & ~df.index.isin(charging_station2.index)]
+        return df
     
 def read_paths(df: pd.DataFrame):
     '''
@@ -102,10 +111,9 @@ def count_paths(df: pd.DataFrame):
         return len(df.groupby(level=0))
     elif 'Vuosi' and 'Kuukausi' and 'Päivä' in df.columns:
         #read from db
-        db_df = read_db_to_df('Silver_SensorData') #muista poistaa node
+        db_df = read_db_to_df('Silver_SensorData')
         #db_df['timestamp'] = pd.to_datetime(db_df['timestamp'])
-        #suodata gold-taulusta latausasemat
-        db_df = _cash_pipe(db_df)
+
         #modify columns
         month_mapping = {
         'Tammikuu-2019': 1,
@@ -220,10 +228,26 @@ def chart_df(df_start, df_end):
     # Create a new dataframe with the index numbers and the data
     chart_data = pd.DataFrame({'Päivät': index, 'kk1': data, 'kk2': data2})
 
-    #new_df = new_df.drop_duplicates()
-    #chart_data = pd.concat([test, test2], ignore_index=True)
-    
     return chart_data
+
+def cart_volume_data(df, area: str='inshop'):
+    '''
+    Palauttaa dataframen suodatettuna, joko ilman latauspisteitä tai pelkät latauspisteet
+    inhouse = kaupan sisällä tapahtuva liikenne
+    charging = paikallaan olevat kärryt, jotka ovat latauksessa
+    Args:
+        df (pd.DataFrame): df
+        area ('inhouse', 'charging'): str
+    Returns:
+        pandas.DataFrame: df
+    '''
+    df = _cash_pipe(df, area)
+    #df = df.groupby(by="node_id")['timestamp'].apply(lambda x: x.max() - x.min()) #laskee ensimmäisen ja viimeisen datapisteen välisen aikajanan
+    df = df.groupby(by="node_id")['y'].count().reset_index()
+    df = df.drop(df[df['y'] < 10000].index).reset_index()
+
+    df['node_id'] = df['node_id'].astype('string').radd('kärry-')
+    return df
 
 def draw(df, show_calibration_data = None):
     # Get image size with this method
