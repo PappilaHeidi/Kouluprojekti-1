@@ -13,7 +13,8 @@ def fetch_nodes():
     con.close()
     return array
 
-def read_db_to_df(tbl: str, node_name: str = None):
+def read_db_to_df(tbl: str, node_name: str=None):
+#def read_db_to_df(tbl: str, node_name: str="3200"):
     '''
     Hakee rivit tietokannasta ja palauttaa dataframen
 
@@ -24,6 +25,11 @@ def read_db_to_df(tbl: str, node_name: str = None):
     Returns:
         pandas.DataFrame: df
     '''
+    #con = dd.connect(database=db_file)
+    #df = con.sql(f"SELECT * FROM {tbl} WHERE node_id = {node_name}").df()
+    #con.close()
+    #return df
+
     if node_name:
         con = dd.connect(database=db_file)
         df = con.sql(f"SELECT * FROM {tbl} WHERE node_id = {node_name}").df()
