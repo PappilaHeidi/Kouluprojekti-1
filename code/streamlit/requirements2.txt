@@ -6,3 +6,5 @@ scipy
 seaborn
 numpy
 datetime
+bokeh==2.4.3.*
+plotly

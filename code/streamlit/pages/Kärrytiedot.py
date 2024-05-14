@@ -7,9 +7,9 @@ import duckdb as dd
 import datetime
 import pandas as pd
 import numpy as np
-
-
-
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.subplots import make_subplots
 
 
 kuukaudet = [
@@ -28,7 +28,7 @@ kuukaudet = [
 ]
 
 st.set_page_config(
-    page_title = "Gigachart",
+    page_title = "Kärryjen tilastoja",
     page_icon="📈",
     layout = "wide"
 )
@@ -44,6 +44,36 @@ def available_nodes(): #joku häikkä nodevalinnassa. Varmaankin session-state j
     node_list = sorted([int(str(x[0])) for x in nodes])
     return node_list
 
+with st.status("Pieni hetki...", expanded=True) as status:
+    st.write("tuodaan dataa tietokannasta")
+    if "big_data" not in st.session_state:
+        st.session_state.big_data = giga.read_db_to_df(tbl)
+    
+    st.write("rakennetaan kärryjen tilastoja")
+    if "charts" not in st.session_state:
+        st.session_state.charts = True
+        df_cart_volume_inshop = giga.cart_volume_data(st.session_state.big_data)
+        df_cart_volume_charging = giga.cart_volume_data(st.session_state.big_data, area='charging')
+        fig = make_subplots(specs=[[{"secondary_y": True}]])
+        fig.add_trace(go.Bar(x=df_cart_volume_inshop['node_id'], y=df_cart_volume_inshop['y'], name="liikkeessä"))
+        fig.add_trace(go.Scatter(x=df_cart_volume_charging['node_id'], y=df_cart_volume_charging['y'], name="latauksessa"), secondary_y=True)
+        fig.update_layout(title_text="Kärryjen aktiivisuuden volyymi")
+        fig.update_xaxes(title_text="Kärryn id", showgrid=True)
+        fig.update_yaxes(title_text="<b>käytössä</b> olevat kärryt", secondary_y=False)
+        fig.update_yaxes(title_text="<b>latauksessa</b> olevat kärryt", secondary_y=True)
+
+        #käyttöaste
+        df_cart_util = df_cart_volume_inshop.copy()
+        df_cart_util['cart_util'] = df_cart_volume_inshop['y'] / df_cart_volume_charging['y']
+
+        fig2 = px.bar(df_cart_util, x='node_id', y='cart_util',
+             
+             labels={'node_id':'Kärryn id', 'cart_util': 'Käyttöaste -%'}, height=400)
+        fig2.update_layout(title_text="Kärryjen käyttöasteet (käytössä/latauksessa)")
+        st.session_state.charts = [fig, fig2]
+
+    status.update(label="Lataus valmis!", state="complete", expanded=False)
+
 if "visibility" not in st.session_state:
     st.session_state.visibility = "hidden"
     st.session_state.disabled = True
@@ -57,16 +87,26 @@ if "aikavali" not in st.session_state:
 if "yksittaiset_reitit" not in st.session_state:
     st.session_state.yksittaiset_reitit = False
 
+
+
 # SIVUPALKKI
 with st.sidebar: 
+    df = st.session_state.big_data
     st.title('GIGAcharts 📈')
     selected_nodes = st.selectbox('Select a node', available_nodes())
-    df = giga.read_db_to_df(tbl, selected_nodes)
+    
+    selected_big_data = st.checkbox('Valitse kaikki kärryt', key='kaikki_karryt')
+    st.write(":warning:")
+    st.write("Kaikkien kärryjen käsittely kestää pidempään")
+    if selected_big_data:
+        st.write(":red[Kaikki kärryt valittu]")
+    else:
+        df = giga.read_db_to_df(tbl, selected_nodes)
     min_date = df['timestamp'].min()
     max_date = df['timestamp'].max()
     months = list(set(df['timestamp'].dt.month.tolist()))
     years = list(set(df['timestamp'].dt.year.tolist()))
-    selected_radio = st.radio("Analysointitapa", ["Määritä oma aikaväli", "Kuukausivertailu", "Päivävertailu", "Yksittäiset reitit"], index=None, key='sidebar_radio')
+    selected_radio = st.radio("Analysointitapa", ["Määritä oma aikaväli", "Kuukausivertailu", "Yksittäiset reitit"], index=None, key='sidebar_radio')
 
     if selected_radio == "Määritä oma aikaväli":
         selected_dates = st.date_input('Select dates', value=(min_date, min_date + datetime.timedelta(days=10)), min_value=min_date, max_value=max_date)
@@ -101,7 +141,7 @@ with st.sidebar:
                 df_end = giga.read_paths(df_end)
             except:
                 st.error("Reittitietoja ei pystytty hakemaan")
-
+            
             path_amount1 = giga.count_paths(df_start)
             path_amount2 = giga.count_paths(df_end)
             df_start.index = df_start.index.set_levels([df_start.index.levels[0], pd.to_datetime(df_start.index.levels[1])])
@@ -109,6 +149,7 @@ with st.sidebar:
             months = list(set(df_end.index.get_level_values(1).month.tolist() + df_start.index.get_level_values(1).month.tolist()))
             kk1 = kuukaudet[months[0]-1]
             kk2 = kuukaudet[months[1]-1]
+            
 
     if selected_radio=="Yksittäiset reitit":
         st.session_state.yksittaiset_reitit = True
@@ -117,7 +158,7 @@ with st.sidebar:
 # PÄÄSIVU VASEN
 with col[0]:
     if selected_radio == "Määritä oma aikaväli" and st.session_state.aikavali:
-        st.markdown("#### Kierrokset")
+        st.markdown("#### Käyttö")
         st.metric(label="Yhteensä ", value=f"{path_amount} kpl")
         st.metric(label="joku", value="24")
 
@@ -139,8 +180,15 @@ with col[1]:
         #st.altair_chart(heatmap, use_container_width=True)
     
     if selected_radio == "Kuukausivertailu" and st.session_state.kuukausivertailu:
+        #käyttömäärät
         chart_data = giga.chart_df(df_start, df_end)
         st.area_chart(chart_data, x="Päivät", y=['kk1','kk2'])
+        #aktiivisuus
+        st.plotly_chart(st.session_state.charts[0],use_container_width=True)
+        
+        st.plotly_chart(st.session_state.charts[1], use_container_width=True)
+
+        
 
     if selected_radio == "Yksittäiset reitit" and st.session_state.yksittaiset_reitit:
         st.write("vapaa reittien plottailu pvm ja noden mukaan")
@@ -180,4 +228,6 @@ with col[2]:
                 - Data: [Iiwari Tracking Solutions](<https://www.iiwari.com/>).
                 - :orange[**Kierrokset**]: Kärryillä kuljetut asiakkaiden kierrosten määrät kaupan sisällä / valittu kuukausi
                 - :orange[**Asiakasmäärät**]: Asiakasmäärien vertailu kuukausittain. Päivät vastaavat samoja kuukauden päiviä
-                ''')
+                - :orange[**Aktiivisuus**]: Kärryjen aktiivisuus on UWB-paikannusjärjestelmän vastaanottamaa signaalia kärryiltä
+                - :orange[**Käyttöaste**]: Kärryjen käyttöaste on niiden käyttöaika suhteessa latausaikaan
+                     ''')
