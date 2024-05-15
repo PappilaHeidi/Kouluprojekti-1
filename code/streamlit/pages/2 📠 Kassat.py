@@ -50,24 +50,31 @@ def fetch_data_from_database(connection, kassojen_aluetta):
 
 # Luo Streamlit-sovellus
 def main():
+    st.set_page_config(page_title="📠 Kassojen analytiikka 📠", page_icon="📠", layout="wide")
     st.title('Kassojen analytiikka')
+    st.markdown("""---""")
 
     st.markdown("""
-    Tervetuloa Kassojen analytiikka -sovellukseen! Tämä sovellus tarjoaa interaktiivisen tavan tarkastella kaupan kassojen alueen liikennettä ja asiakasmääriä. Sovelluksessa voi tutkia kaupan pohjapiirrosta, nähdä kassojen käytön eri aikoina ja päivinä sekä tarkastella asiakkaiden liikkumista kassa-alueella.
+    ## Tervetuloa Kassojen analytiikka -sovellukseen! 
 
-    Sovelluksen avulla voit tehdä seuraavia asioita:
-    - Tutkia kaupan pohjapiirrosta ja kassojen sijainteja
-    - Tarkastella kassojen käyttöä eri tunteina ja päivinä
-    - Seurata asiakasmääriä kassojen alueella eri aikaväleillä
-
-    Valitse haluamasi ajanjakso ja tutustu kaupan liikenteeseen ja asiakasmääriin!
+    Tämä sovellus tarjoaa interaktiivisen tavan tarkastella kaupan kassojen alueen liikennettä ja asiakasmääriä. 
+        Sovelluksen avulla voit tehdä seuraavia asioita:
+        - Tutkia kaupan pohjapiirrosta ja kassojen sijainteja
+        - Tarkastella kassojen käyttöä eri tunteina ja päivinä
+        - Seurata asiakasmääriä kassojen alueella eri aikaväleillä
+        
+        Valitse haluamasi ajanjakso vasemmalta sidebarista ja tutustu kaupan kassatarpeisiin!
     """)
+
+    st.markdown("""---""")
 
     # Pohjapiirros ja scatter-plot
     image_path = 'kauppa.jpg'
     image = draw_store_layout(image_path)
-    col1, col2 = st.columns([1, 2])
-    col1.image(image, caption='Kaupan pohjapiirros kassojen alueella', use_column_width=True)
+
+ 
+    st.subheader('Kaupan pohjapiirros kassojen alueella')
+    st.image(image, width=500, use_column_width=True)
 
     # Yhdistä tietokantaan
     connection = connect_to_database('/code/data/duckdb.database')
@@ -123,17 +130,20 @@ def main():
     # Nollaa indeksi
     kassojen_maara_df = kassojen_maara_aikapisteittain.reset_index().rename(columns={'node_id': 'Kassojen määrä'})
 
+    # Muuta dayofweek-numeroiden nimet 1-7
+    kassojen_maara_df['dayofweek'] = kassojen_maara_df['dayofweek'] + 1
+
     # Näytä scatter-plot kärryt kassalla
-    with col2:
-        st.subheader('Scatter-plot - Kärryn sijainti kassa-alueella')
-        st.markdown("Tämä scatter-plot näyttää kärryjen sijainnin kassa-alueella, mikä auttaa havainnollistamaan asiakkaiden liikkumista kassalla.")
-        fig, ax = plt.subplots(figsize=(10, 6))
-        ax.scatter(df_filtered['x'], df_filtered['y'], alpha=0.5)
-        ax.set_title('Scatter-plot - Kärryn sijainti kassa-alueella')
-        ax.set_xlabel('X-koordinaatti')
-        ax.set_ylabel('Y-koordinaatti')
-        ax.grid(True)
-        col2.pyplot(fig)
+
+    st.subheader('Scatter-plot - Kärryn sijainti kassa-alueella')
+    st.markdown("Tämä scatter-plot näyttää kärryjen sijainnin kassa-alueella, mikä auttaa havainnollistamaan asiakkaiden liikkumista kassalla.")
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.scatter(df_filtered['x'], df_filtered['y'], alpha=0.5)
+    ax.set_title('Scatter-plot - Kärryn sijainti kassa-alueella')
+    ax.set_xlabel('X-koordinaatti')
+    ax.set_ylabel('Y-koordinaatti')
+    ax.grid(True)
+    st.pyplot(fig)
 
     col3, col4 = st.columns(2)
 
@@ -147,6 +157,7 @@ def main():
         ax1.set_xlabel('Tunti')
         ax1.set_ylabel('Kassojen määrä')
         ax1.legend(title='Viikonpäivä')
+        ax1.set_xticklabels(ax1.get_xticklabels(), rotation=45)  # Käännetään tuntien merkinnät
         ax1.grid(True)
         st.pyplot(fig1)
 
@@ -160,9 +171,6 @@ def main():
         ax2.set_ylabel('Kassojen määrä')
         ax2.legend(title='Tunti')
 
-        # Aseta x-akselin merkinnät vastaamaan numeroita 1-7
-        ax2.set_xticks(range(7))
-        ax2.set_xticklabels(range(1, 8))
 
         ax2.grid(True)
         st.pyplot(fig2)

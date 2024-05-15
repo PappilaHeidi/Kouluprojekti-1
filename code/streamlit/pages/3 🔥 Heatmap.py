@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title('Heidin GIGAHeatmap')
+st.title('Heatmap')
 
 st.markdown("""
             Kaupanmapin kuumat kohteet tulostettuna lämpimillä(Punainen 😡) ja kylmillä väreillä (Valkoinen 💀)""")
