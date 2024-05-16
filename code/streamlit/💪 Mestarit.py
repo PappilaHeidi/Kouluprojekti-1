@@ -19,7 +19,7 @@ st.link_button("Rojektin Blogi", "https://gitlab.dclabra.fi/wiki/F_wwWScxRwi_Hn0
 st.markdown('<iframe src="https://app.clockify.me/shared/6638f3a1963af9639f17dfb0" width="1000" height="600"></iframe>', unsafe_allow_html=True)
 st.write("---")
 
-st.header('📰 Tarina Suorittajista 📰')
+st.header('📜 Suorittajien Seikkailu 📜')
 st.markdown("""
     
 
@@ -69,8 +69,8 @@ st.markdown("""
 
 st.write("---")
 
-# Lisää uusi osio Scrum käyttäjätarina
-st.header('📖 Scrum käyttäjätarina 📖')
+
+st.header('📖 Käyttäjätarinoita: Tokmannin Tavoitteet 📖')
 st.markdown("""
 **Scrum käyttäjätarina**
 
