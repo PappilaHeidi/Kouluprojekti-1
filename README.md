@@ -1,13 +1,10 @@
 # Projektiopinnot 1: Datan hallinta (2024) - Keskivahavat-suorittajat
 Jäsenet:
+
 Andreas Konga
-
 Joni Kauppinen
-
 Linnea Pekkanen
-
 Mirva Kirvesniemi
-
 Heidi Pappila
 
 # Projektin kuvaus
