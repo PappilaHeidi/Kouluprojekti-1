@@ -40,12 +40,13 @@ docker-compose down
 1. **Asenna virtualenv komennolla:**
 ```pip install virtualenv```
 
+2. **Luo uusi virtuaaliympäristö komennolla:**
 ```python -m venv .venv```
 
-2. **Aktivoi .venv:**
+3. **Aktivoi .venv:**
 ```.venv/Scripts/activate```
 
-3. **Asenna paketit:**
+4. **Asenna paketit:**
 ```pip install -r requirements.txt```
 
 ## Jupyterlab
