@@ -196,13 +196,13 @@ with col[0]:
         st.metric(label="joku", value="24")
 
     if selected_radio=="Kuukausivertailu" and st.session_state.kuukausivertailu:
-        st.markdown("#### Kierrokset")
+        st.markdown("### Kierrokset")
         st.metric(label=kk1, value=f"{path_amount1} kpl")
         st.metric(label=kk2, value=f"{path_amount2} kpl", delta=f"{np.round(((path_amount2-path_amount1)/path_amount1 * 100))} %")
         st.write("")
         st.markdown("#### Päivän keskiarvot")
-        st.metric(label=kk1, value=f"{path_amount1//30} kpl")
-        st.metric(label=kk2, value=f"{path_amount2//30} kpl")
+        st.metric(label=kk1, value=f"{np.round(path_amount1/30,1)} kpl")
+        st.metric(label=kk2, value=f"{np.round(path_amount2/30, 1)} kpl")
 # PÄÄSIVU KESKI
 with col[1]:
     
@@ -305,6 +305,7 @@ with col[2]:
             st.write('''
                 - Data: [Iiwari Tracking Solutions](<https://www.iiwari.com/>).
                 - :orange[**Kierrokset**]: Kärryillä kuljetut asiakkaiden kierrosten määrät kaupan sisällä / valittu kuukausi
+                - :orange[**Päivän keskiarvot**]: Kuukauden asiakasmääristä laskettu keskiarvo per päivä
                 - :orange[**Asiakasmäärät**]: Asiakasmäärien vertailu kuukausittain. Päivät vastaavat samoja kuukauden päiviä
                 - :orange[**Aktiivisuus**]: Kärryjen aktiivisuus on UWB-paikannusjärjestelmän vastaanottamaa signaalia kärryiltä
                 - :orange[**Käyttöaste**]: Kärryjen käyttöaste on niiden käyttöaika suhteessa latausaikaan
