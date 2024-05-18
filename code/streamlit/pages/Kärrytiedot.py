@@ -10,7 +10,7 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
-
+from multiprocessing import Pool
 
 kuukaudet = [
     "Tammikuu",
@@ -34,12 +34,12 @@ st.set_page_config(
 )
 
 
-st.sidebar.markdown("Sivupalkki")
+
 #Käytä Silver-databasea
 tbl = "Silver_SensorData"
 col = st.columns((1.5, 10.5, 3.3), gap='medium')
 
-def available_nodes(): #joku häikkä nodevalinnassa. Varmaankin session-state ja sorttaus. Jep sorttaus oli!
+def available_nodes():
     nodes = giga.fetch_nodes() #fetch all nodes in db
     node_list = sorted([int(str(x[0])) for x in nodes])
     return node_list
@@ -87,14 +87,20 @@ if "aikavali" not in st.session_state:
 if "yksittaiset_reitit" not in st.session_state:
     st.session_state.yksittaiset_reitit = False
 
+if 'plot' not in st.session_state:
+    st.session_state.plot = 0
 
+if 'paths' not in st.session_state:
+    st.session_state.paths = 0
+
+if 'df_delta' not in st.session_state:
+    st.session_state.df_delta = False
 
 # SIVUPALKKI
 with st.sidebar: 
     df = st.session_state.big_data
-    st.title('GIGAcharts 📈')
+    st.title('Kärrytilasto 📈')
     selected_nodes = st.selectbox('Select a node', available_nodes())
-    
     selected_big_data = st.checkbox('Valitse kaikki kärryt', key='kaikki_karryt')
     st.write(":warning:")
     st.write("Kaikkien kärryjen käsittely kestää pidempään")
@@ -106,10 +112,10 @@ with st.sidebar:
     max_date = df['timestamp'].max()
     months = list(set(df['timestamp'].dt.month.tolist()))
     years = list(set(df['timestamp'].dt.year.tolist()))
-    selected_radio = st.radio("Analysointitapa", ["Määritä oma aikaväli", "Kuukausivertailu", "Yksittäiset reitit"], index=None, key='sidebar_radio')
+    selected_radio = st.radio("Analysointitapa", ["Kuukausivertailu", "Yksittäiset reitit"], index=None, key='sidebar_radio')
 
     if selected_radio == "Määritä oma aikaväli":
-        selected_dates = st.date_input('Select dates', value=(min_date, min_date + datetime.timedelta(days=10)), min_value=min_date, max_value=max_date)
+        selected_dates = st.date_input('Valitse aikajakso', value=(min_date, min_date + datetime.timedelta(days=10)), min_value=min_date, max_value=max_date)
         try:
             df_plot = df[df['timestamp'].dt.date.between(*selected_dates)]
             df_paths = giga.read_paths(df_plot)
@@ -118,7 +124,7 @@ with st.sidebar:
         except:
             st.error("Valitse päättymispäivä")
             st.session_state.aikavali = False
-    
+        
     if selected_radio=="Kuukausivertailu":
         selected_first_year = st.selectbox("Valitse vuosi", years)
         month = list(set(df[df['timestamp'].dt.year == selected_first_year]['timestamp'].dt.month.tolist()))
@@ -137,8 +143,17 @@ with st.sidebar:
             df_start = df[(df['timestamp'].dt.year == selected_first_year) & (df['timestamp'].dt.month == selected_first_month)]
             df_end = df[(df['timestamp'].dt.year == selected_compared_year) & (df['timestamp'].dt.month == selected_compared_month)]
             try:
-                df_start = giga.read_paths(df_start)
-                df_end = giga.read_paths(df_end)
+                #start_time = time.perf_counter()
+                #df_start = giga.read_paths(df_start)
+                #df_end = giga.read_paths(df_end)
+                #multiprocessing
+                with Pool(3) as p:
+                    df_pool = p.map(giga.read_paths, [df_start, df_end])
+                df_start = df_pool[0]
+                df_end = df_pool[1]
+
+                #end_time = time.perf_counter()
+                #st.write("total:", end_time-start_time)
             except:
                 st.error("Reittitietoja ei pystytty hakemaan")
             
@@ -148,13 +163,31 @@ with st.sidebar:
             df_end.index = df_end.index.set_levels([df_end.index.levels[0], pd.to_datetime(df_end.index.levels[1])])
             months = list(set(df_end.index.get_level_values(1).month.tolist() + df_start.index.get_level_values(1).month.tolist()))
             kk1 = kuukaudet[months[0]-1]
-            kk2 = kuukaudet[months[1]-1]
-            
+            kk2 = kuukaudet[months[1]-1]     
 
     if selected_radio=="Yksittäiset reitit":
+        def df_delta():
+            st.session_state.df_delta = True
+
         st.session_state.yksittaiset_reitit = True
+        with st.status("Pieni hetki...", expanded=True) as status:
+            st.write("kerätään kärryjä")
 
+            status.update(label="Lataus valmis!", state="complete", expanded=False)
 
+        selected_dates = st.date_input('Valitse aikajakso', value=(min_date, min_date + datetime.timedelta(days=10)), min_value=min_date, max_value=max_date, on_change = df_delta)
+        if st.session_state.df_delta:
+            st.session_state.paths = df[df['timestamp'].dt.date.between(*selected_dates)]
+            st.session_state.df_delta = False
+        try:
+            df_paths = st.session_state.paths
+            df_paths = giga.read_paths(df_paths)
+            path_amount = giga.count_paths(df_paths)
+            st.session_state.aikavali = True
+        except:
+            st.error("Valitse päättymispäivä")
+            st.session_state.aikavali = False
+        
 # PÄÄSIVU VASEN
 with col[0]:
     if selected_radio == "Määritä oma aikaväli" and st.session_state.aikavali:
@@ -166,9 +199,10 @@ with col[0]:
         st.markdown("#### Kierrokset")
         st.metric(label=kk1, value=f"{path_amount1} kpl")
         st.metric(label=kk2, value=f"{path_amount2} kpl", delta=f"{np.round(((path_amount2-path_amount1)/path_amount1 * 100))} %")
-
-
-
+        st.write("")
+        st.markdown("#### Päivän keskiarvot")
+        st.metric(label=kk1, value=f"{path_amount1//30} kpl")
+        st.metric(label=kk2, value=f"{path_amount2//30} kpl")
 # PÄÄSIVU KESKI
 with col[1]:
     
@@ -176,8 +210,6 @@ with col[1]:
         #ei piirretä tähän radioon
         st.image(giga.draw(df_plot))
         st.write("Linechartteja: volyymi(liikenne), asiakkaiden määrä/pvm, säätiedot")
-        #heatmap = plotlit.make_heatmap(df_plot, 'timestamp', 'timestamp', '', 'blues')
-        #st.altair_chart(heatmap, use_container_width=True)
     
     if selected_radio == "Kuukausivertailu" and st.session_state.kuukausivertailu:
         #käyttömäärät
@@ -185,13 +217,59 @@ with col[1]:
         st.area_chart(chart_data, x="Päivät", y=['kk1','kk2'])
         #aktiivisuus
         st.plotly_chart(st.session_state.charts[0],use_container_width=True)
-        
         st.plotly_chart(st.session_state.charts[1], use_container_width=True)
 
-        
+#plottaussivu
+def plot_button(df_paths, input_num):
+    
+    df_level_0_loc = df_paths.index.unique('paths')[input_num]
+    df_paths = df_paths.loc[df_level_0_loc]
+    st.image(giga.draw(df_paths))
 
-    if selected_radio == "Yksittäiset reitit" and st.session_state.yksittaiset_reitit:
-        st.write("vapaa reittien plottailu pvm ja noden mukaan")
+if selected_radio == "Yksittäiset reitit" and st.session_state.aikavali:
+    st.markdown("# Seuraa kierroksia pohjakuvasta")
+    
+    plot_input = st.number_input("Seuraava reitti", value = 1, min_value = 1, max_value = path_amount)
+    col2, col3, col4 = st.columns(3, gap='small')
+    df_timedelta = df_paths.index.get_level_values('timestamp')
+    time_spent = df_timedelta.max() - df_timedelta
+    df_paths_paths = df_paths.reset_index()
+    min_time = df_paths_paths.groupby('paths')['timestamp'].min()
+    max_time = df_paths_paths.groupby('paths')['timestamp'].max()
+    df_path_timedelta = max_time - min_time
+    df_path_timedelta = pd.DataFrame(df_path_timedelta)
+    df_path_timedelta['seconds'] = df_path_timedelta['timestamp'].dt.total_seconds()
+    path_avg = df_path_timedelta['timestamp'].mean()
+    int_value_minutes_avg = round(int(path_avg.total_seconds()) / 60, 0)
+    df_path_timedelta['int_timedelta'] = (df_path_timedelta['timestamp'].dt.total_seconds() / 60).round(0)
+    df_path_timedelta = df_path_timedelta.reset_index()
+    
+    with col2:
+        st.metric(label="Asiakkaita yht.", value=f"{path_amount} kpl")
+    with col3:
+        if st.session_state.kaikki_karryt:
+            st.metric(label="Kierrosten keskiarvo", value=f'{int_value_minutes_avg//len(available_nodes())} min')
+        else: 
+            st.metric(label="Kierrosten keskiarvo", value=f'{int_value_minutes_avg} min')
+
+    with col4:
+        st.metric(label="Nykyinen kierrosaika", value=f"{df_path_timedelta['int_timedelta'][plot_input-1]} min")
+    
+    plot_button(df_paths, plot_input)
+
+    with st.expander('Lisätietoja', expanded=True):
+        st.write('''
+            - Data: [Iiwari Tracking Solutions](<https://www.iiwari.com/>).
+            - :red[**Asiakasmäärät**]: Ajanjakson aikaiset ja kärrykohtaiset asiakasmäärät
+                 - Asiakasmäärät on laskettu hakemalla aluksi välimuistissa oleva dataframe-olio ja käyttämällä se read_paths() -> _cash_pipe() -> count_paths()-funktioissa.
+                 reittien laskufunktio hakee reittien alkamis- ja päättymispisteet ja palauttaa suodatetun dataframen uusilla indekseillä ja sarakkeilla. Tämän jälkeen asiakasmääriä
+                 voi kysellä count_paths() funktiossa. count_paths()-funktio hyväksyy myös vieraita dataframe-olioita, jos tietty notaatio täsmää.
+            - :red[**Kierrosten keskiarvo**]: Valitun ajanjakson ja asiakkaiden myymälässä vietetyn ajan keskiarvo
+                 - Keskiarvo on saatu laskemalla valittujen kärryjen kierrosaika myymälässä, jaettuna kyseisillä kärryillä
+            - :red[**Nykyinen kierrosaika**]: Kartalla näkyvän kierroksen pituus minuutteina
+                 - Keskiarvot ja kierrosten ajat on saatu samasta dataframesta ryhmittämällä reitti-indeksit ja laskemalla max-min-erotus ja muuttamalla datetime sekunnit int-minuuteiksi
+            - :red[**Datapisteet**]: Asiakkaan kävelyreitti porteilta, kassalle
+                 ''')    
 
 #PÄÄSIVU OIKEA
 with col[2]:
@@ -231,3 +309,4 @@ with col[2]:
                 - :orange[**Aktiivisuus**]: Kärryjen aktiivisuus on UWB-paikannusjärjestelmän vastaanottamaa signaalia kärryiltä
                 - :orange[**Käyttöaste**]: Kärryjen käyttöaste on niiden käyttöaika suhteessa latausaikaan
                      ''')
+

@@ -71,6 +71,7 @@ def read_paths(df: pd.DataFrame):
         pandas.DataFrame: df
     
     '''
+    df = _cash_pipe(df, area='inshop')
     df = df[(df['x'] >= 550)] # filter for out of bounds carts that are outside of the shop routes
     df['time_diff'] = df['timestamp'].diff() #if new values are not added before 1min, we can assume the cart have left the shop
     #this is for finding the carts that are resting after a round trip in shop. They rest at either charging stations or out of the shop before they are taken in again
@@ -251,20 +252,9 @@ def cart_volume_data(df, area: str='inshop'):
 
 def draw(df, show_calibration_data = None):
     # Get image size with this method
-    img = Image.open('../kauppa.jpg')
+    img = Image.open('./kauppa4.jpg')
     width, height = img.size
     print("pixel size", img.size)
-
-
-    # Create image widget
-    file = open("../kauppa.jpg", "rb")
-    image = file.read()
-    #widgets.Image(
-    #    value=image,
-    #    format='png',
-    #    width=width,
-    #    height=height,
-    #)
 
     # Draw on image
     d = ImageDraw.Draw(img)
@@ -284,7 +274,7 @@ def draw(df, show_calibration_data = None):
 
     for index, row in df.iterrows():
         (x,y) = scale_coords(row.x, row.y)
-        d.rectangle((x,y,x+2,y+2), fill=(int(row.node_id)%255,0,0,20))
+        d.ellipse((x,y,x+4,y+4), fill=(int(row.node_id)%255,0,0,20))
     
     def show_cal_data():
         #y-akselin 0-linja kuvassa
