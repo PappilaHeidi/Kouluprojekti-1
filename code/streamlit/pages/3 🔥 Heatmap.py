@@ -14,7 +14,9 @@ st.set_page_config(
 st.title('Heatmap')
 
 st.markdown("""
-            Kaupanmapin kuumat kohteet tulostettuna lämpimillä(Punainen 😡) ja kylmillä väreillä (Valkoinen 💀)""")
+            Kaupan kartan kuumat kohteet tulostettuna lämpimillä (Punainen 😡) ja kylmillä väreillä (Valkoinen 💀).
+            Tämä visualisointi auttaa tunnistamaan alueet, joilla asiakkaat viettävät eniten aikaa kaupassa.
+            """)
 
 # Avataan tietokanta ja valitaan oikea datasetti
 def read_node(tbl: str, node_name: str, file: str):
@@ -49,8 +51,12 @@ def load_image(path):
 img = load_image(IMG_PATH)
 img_height, img_width, _ = img.shape
 
-# Luo heatmap
 st.title('🔥 Kuumimmat alueet halutun aikavälin mukaan 🔥')
+
+st.markdown("""
+            Tässä osiossa voit valita aikavälin ja nähdä kaupan kuumimmat alueet kyseisenä aikana.
+            Käytä liukusäätimiä valitaksesi haluamasi aloitus- ja lopetusajan.
+            """)
 
 # Valitse aikaväli
 start_hour = st.slider("Valitse aloitusaika:", 9, 21, 9)
@@ -71,7 +77,7 @@ if valid_time_range:
 
     # Luo heatmap aikavälin perusteella
     fig, ax = plt.subplots(figsize=(13, 13))
-    hmax = sns.kdeplot(data=selected_data, x='x', y='y', cmap="Reds", shade=True, bw=.15, alpha=1, ax=ax)
+    hmax = sns.kdeplot(data=selected_data, x='x', y='y', cmap="Reds", shade=True, bw=.15, alpha=0.6, ax=ax)
     ax.imshow(img, zorder=0, extent=[0, img_width, 0, img_height], alpha=1)
     plt.title(f"Aikaväli {start_hour}:00-{end_hour}:00")
     plt.colorbar(hmax.collections[0], fraction=0.02)
@@ -82,6 +88,11 @@ df['timestamp'] = pd.to_datetime(df['timestamp'])
 df['weekday'] = df['timestamp'].dt.day_name()
 
 st.title('🥵 Viikonpäivän kuumimmat 🥵')
+
+st.markdown("""
+            Tässä osiossa voit valita viikonpäivän ja nähdä kaupan kuumimmat alueet kyseisenä päivänä.
+            Valitse viikonpäivä alla olevasta valikosta.
+            """)
 
 if valid_time_range:
     # Valitse viikonpäivä
@@ -102,7 +113,7 @@ if valid_time_range:
     # Rajaa data valitulle viikonpäivälle ja piirrä heatmap
     df_lim_weekday = df[(df['x'] >= 305) & (df['x'] <= 1250) & (df['y'] <= 560) & (df['weekday'] == selected_day_eng)]
     fig, ax = plt.subplots(figsize=(13, 13))
-    hmax_weekday = sns.kdeplot(data=df_lim_weekday, x='x', y='y', cmap="Reds", shade=True, bw=.15, alpha=1)
+    hmax_weekday = sns.kdeplot(data=df_lim_weekday, x='x', y='y', cmap="Reds", shade=True, bw=.15, alpha=0.6)
     plt.imshow(img, zorder=0, extent=[0, img_width, 0, img_height], alpha=1)
     plt.title(selected_day)
     st.pyplot(fig)

@@ -111,6 +111,11 @@ def main():
         "Heinäkuu-2019", "Elokuu-2019", "Syyskuu-2019", "Lokakuu-2019", "Marraskuu-2019", "Joulukuu-2019", "Tammikuu-2020"
     ]
     unique_months = sorted(df_filtered['Kuukausi'].unique(), key=lambda x: months_order.index(x))
+
+    # Aseta oletuskuukausi ja -viikko
+    default_month = "Maaliskuu-2019"
+    default_week = 13
+
     selected_month_name = st.sidebar.selectbox('Kuukausi', unique_months)
 
     # Näytä valintakentät vain, kun kuukausi on valittu
