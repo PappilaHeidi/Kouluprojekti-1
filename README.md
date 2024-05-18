@@ -1,45 +1,60 @@
-# Dockerfile
-Pystytä docker ensimmäistä kertaa
+# Projektiopinnot 1: Datan hallinta (2024) - Keskivahavat-suorittajat
+Jäsenet:
+Andreas Konga
+Joni Kauppinen
+Linnea Pekkanen
+Mirva Kirvesniemi
+Heidi Pappila
 
-rakenna levykuvat ja kontit terminaalissa
+# Projektin kuvaus
+Tässä projektissa pyritään asiakkaalle, eli Tokmannille, tarjoamaan syvällistä ja hyödyllistä analyysiä toimitetusta datasta, joka perustuu asiakkaiden kärryihin ja niiden liikkeisiin Tokmannin pohjapiirroksessa. Vaikka emme tiedä tarkalleen, miltä hyllyltä löytyy mitäkin tuotetta, voimme silti analysoida asiakkaiden liikkumismalleja myymälässä. Tavoitteena on ymmärtää, miten asiakkaat navigoivat myymälässä, tunnistaa suosituimmat reitit ja alueet, sekä havaita mahdolliset pullonkaulat ja tehottomat alueet.
+
+Tämän analyysin avulla voimme tarjota Tokmannille tietoa siitä, miten myymälän layout vaikuttaa asiakkaiden ostokäyttäytymiseen. Voimme esimerkiksi tunnistaa alueet, joissa asiakkaat viettävät eniten aikaa tai reitit, joita pitkin asiakkaat yleensä liikkuvat. Tämä voi auttaa optimoimaan myymälän layoutia ja parantamaan asiakaskokemusta, vaikka emme tiedä tarkalleen tuotteiden sijainteja.
+
+# Asennus- ja käyttöohjeet
+
+*Kaikki vaaditut riippuvuudet asentuvat docker-compose build -komennon yhteydessä.*
+
+## Dockerfile ja Docker-compose pystytys terminaalissa
+
+**Rakenna levykuvat ja kontit**
 ```shell=
 docker-compose build
+```
 
-# Ympäristön pystyttäminen
-
-Docker-konttien käynnistys
+**Docker-konttien käynnistys**
 ```shell=
 docker-compose up
 ```
 
-# Virtualenv asentaminen
+**Ympäristön alasajo**
+```shell=
+ctrl + c 
+tai
+docker-compose down
+```
 
-Asenna virtualenv komennolla
+## Virtualenv asentaminen terminaalissa
 
+Asenna virtualenv komennolla:
 ```pip install virtualenv```
 
 ```python -m venv .venv```
 
-Aktivoi .venv
+Aktivoi .venv:
 ```.venv/Scripts/activate```
 
-Asenna paketit
-
+Asenna paketit:
 ```pip install -r requirements.txt```
 
-# Ympäristön alasajo
+## Jupyterlab
+Avaa jupyter-ympäristö selaimessa http://localhost:8889 ja kirjoita token.
 
-Aja projektin juurikansiossa komento
+Token: 
+```daika```
 
-```shell=
-docker-compose down
-```
-
-tai ctrl+c
-
-# Jupyterlab
-
-Avaa jupyter-ympäristö selaimessa http://localhost:8889 ja loihdi tokeniin `daika`. Tämän myötä sinulle pitäisi avautua projektin touhuympäristö. Avaa siinä ympäristössä tiedosto `start.ipynb` ja suorita kaikki koodisolut ylhäältä alas. Loppuun pitäisi piirtyä kartta, jossa on punaisia pisteitä.
+## Streamlit
+Avaa selaimessa http://localhost:8501.
 
 # DuckDB:n alustaminen & Tietokanta arkkitehtuuri & ETL
 
