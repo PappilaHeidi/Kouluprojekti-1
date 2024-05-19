@@ -44,35 +44,12 @@ def available_nodes():
     node_list = sorted([int(str(x[0])) for x in nodes])
     return node_list
 
-with st.status("Pieni hetki...", expanded=True) as status:
-    st.write("tuodaan dataa tietokannasta")
-    if "big_data" not in st.session_state:
-        st.session_state.big_data = giga.read_db_to_df(tbl)
-    
-    st.write("rakennetaan kärryjen tilastoja")
-    if "charts" not in st.session_state:
-        st.session_state.charts = True
-        df_cart_volume_inshop = giga.cart_volume_data(st.session_state.big_data)
-        df_cart_volume_charging = giga.cart_volume_data(st.session_state.big_data, area='charging')
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
-        fig.add_trace(go.Bar(x=df_cart_volume_inshop['node_id'], y=df_cart_volume_inshop['y'], name="liikkeessä"))
-        fig.add_trace(go.Scatter(x=df_cart_volume_charging['node_id'], y=df_cart_volume_charging['y'], name="latauksessa"), secondary_y=True)
-        fig.update_layout(title_text="Kärryjen aktiivisuuden volyymi")
-        fig.update_xaxes(title_text="Kärryn id", showgrid=True)
-        fig.update_yaxes(title_text="<b>käytössä</b> olevat kärryt", secondary_y=False)
-        fig.update_yaxes(title_text="<b>latauksessa</b> olevat kärryt", secondary_y=True)
+def big_data(tbl):
+    pass
+    #st.session_state.big_data = giga.read_db_to_df(tbl)
 
-        #käyttöaste
-        df_cart_util = df_cart_volume_inshop.copy()
-        df_cart_util['cart_util'] = df_cart_volume_inshop['y'] / df_cart_volume_charging['y']
-
-        fig2 = px.bar(df_cart_util, x='node_id', y='cart_util',
-             
-             labels={'node_id':'Kärryn id', 'cart_util': 'Käyttöaste -%'}, height=400)
-        fig2.update_layout(title_text="Kärryjen käyttöasteet (käytössä/latauksessa)")
-        st.session_state.charts = [fig, fig2]
-
-    status.update(label="Lataus valmis!", state="complete", expanded=False)
+def volume_charts(df):
+    st.session_state.charts = giga.cart_volume_chart(df)
 
 if "visibility" not in st.session_state:
     st.session_state.visibility = "hidden"
@@ -96,18 +73,24 @@ if 'paths' not in st.session_state:
 if 'df_delta' not in st.session_state:
     st.session_state.df_delta = False
 
+if "charts" not in st.session_state:
+        st.session_state.charts = True
+
 # SIVUPALKKI
 with st.sidebar: 
-    df = st.session_state.big_data
     st.title('Kärrytilasto 📈')
-    selected_nodes = st.selectbox('Select a node', available_nodes())
+    selected_nodes = st.multiselect('Select a node', available_nodes(), default=3200)
     selected_big_data = st.checkbox('Valitse kaikki kärryt', key='kaikki_karryt')
     st.write(":warning:")
     st.write("Kaikkien kärryjen käsittely kestää pidempään")
-    if selected_big_data:
+    if st.session_state.kaikki_karryt:
         st.write(":red[Kaikki kärryt valittu]")
+        df = giga.read_db_to_df(tbl)
+        st.session_state.charts = giga.cart_volume_chart(df)
     else:
         df = giga.read_db_to_df(tbl, selected_nodes)
+        st.session_state.charts = giga.cart_volume_chart(df)
+
     min_date = df['timestamp'].min()
     max_date = df['timestamp'].max()
     months = list(set(df['timestamp'].dt.month.tolist()))
@@ -248,9 +231,9 @@ if selected_radio == "Yksittäiset reitit" and st.session_state.aikavali:
         st.metric(label="Asiakkaita yht.", value=f"{path_amount} kpl")
     with col3:
         if st.session_state.kaikki_karryt:
-            st.metric(label="Kierrosten keskiarvo", value=f'{int_value_minutes_avg//len(available_nodes())} min')
+            st.metric(label="Kierrosten keskiarvo", value=f'{int_value_minutes_avg//len(available_nodes)} min')
         else: 
-            st.metric(label="Kierrosten keskiarvo", value=f'{int_value_minutes_avg} min')
+            st.metric(label="Kierrosten keskiarvo", value=f'{int_value_minutes_avg//len(selected_nodes)} min')
 
     with col4:
         st.metric(label="Nykyinen kierrosaika", value=f"{df_path_timedelta['int_timedelta'][plot_input-1]} min")

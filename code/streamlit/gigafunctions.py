@@ -3,10 +3,12 @@ import pandas as pd
 import numpy as np
 from PIL import Image, ImageDraw
 from datetime import datetime, timedelta
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.subplots import make_subplots
 
 
-
-db_file = "/code/data/duckdb.database"
+db_file = "../data/duckdb.database"
 
 def fetch_nodes():
     con = dd.connect(database=db_file)
@@ -14,7 +16,7 @@ def fetch_nodes():
     con.close()
     return array
 
-def read_db_to_df(tbl: str, node_name: str=None):
+def read_db_to_df(tbl: str, node_name: list=None):
 #def read_db_to_df(tbl: str, node_name: str="3200"):
     '''
     Hakee rivit tietokannasta ja palauttaa dataframen
@@ -26,14 +28,11 @@ def read_db_to_df(tbl: str, node_name: str=None):
     Returns:
         pandas.DataFrame: df
     '''
-    #con = dd.connect(database=db_file)
-    #df = con.sql(f"SELECT * FROM {tbl} WHERE node_id = {node_name}").df()
-    #con.close()
-    #return df
 
     if node_name:
+        node_name = ', '.join(str(i) for i in node_name)
         con = dd.connect(database=db_file)
-        df = con.sql(f"SELECT * FROM {tbl} WHERE node_id = {node_name}").df()
+        df = con.sql(f"SELECT * FROM {tbl} WHERE node_id IN ({node_name})").df()
         con.close()
         return df
     else:
@@ -249,6 +248,28 @@ def cart_volume_data(df, area: str='inshop'):
 
     df['node_id'] = df['node_id'].astype('string').radd('kärry-')
     return df
+
+
+def cart_volume_chart(df):
+    df_cart_volume_inshop = cart_volume_data(df)
+    df_cart_volume_charging = cart_volume_data(df, area='charging')
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(go.Bar(x=df_cart_volume_inshop['node_id'], y=df_cart_volume_inshop['y'], name="liikkeessä"))
+    fig.add_trace(go.Scatter(x=df_cart_volume_charging['node_id'], y=df_cart_volume_charging['y'], name="latauksessa"), secondary_y=True)
+    fig.update_layout(title_text="Kärryjen aktiivisuuden volyymi")
+    fig.update_xaxes(title_text="Kärryn id", showgrid=True)
+    fig.update_yaxes(title_text="<b>käytössä</b> olevat kärryt", secondary_y=False)
+    fig.update_yaxes(title_text="<b>latauksessa</b> olevat kärryt", secondary_y=True)
+
+    #käyttöaste
+    df_cart_util = df_cart_volume_inshop.copy()
+    df_cart_util['cart_util'] = df_cart_volume_inshop['y'] / df_cart_volume_charging['y']
+
+    fig2 = px.bar(df_cart_util, x='node_id', y='cart_util',
+             
+    labels={'node_id':'Kärryn id', 'cart_util': 'Käyttöaste -%'}, height=400)
+    fig2.update_layout(title_text="Kärryjen käyttöasteet (käytössä/latauksessa)")
+    return fig, fig2
 
 def draw(df, show_calibration_data = None):
     # Get image size with this method
