@@ -121,38 +121,38 @@ with tab1:
     with col1:
         st.info("Maksimi | max")
         with st.container(border=True):
-            st.markdown('<span style="color:pink;">Näytevälin maksimi kertoo suurimman muutoksen havaintojen välillä.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Näytevälin maksimi kertoo suurimman muutoksen havaintojen välillä.</span>', unsafe_allow_html=True)
             st.metric("Näytevälin maksimi:", f"{max_dt:.2f}s")
 
     with col2:
         st.info("Minimi | min")
         with st.container(border=True):
-            st.markdown('<span style="color:pink;">Näytevälin minimi kertoo pienimmän muutoksen havaintojen välillä.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Näytevälin minimi kertoo pienimmän muutoksen havaintojen välillä.</span>', unsafe_allow_html=True)
             st.metric("Näytevälin minimi:", f"{min_dt:.2f}s")
 
     with col3:
         st.info("Mediaani | η")
         with st.container(border=True):
-            st.markdown('<span style="color:pink;">Näytevälin mediaani kertoo havaintojen keskimmäisen arvon jakaumassa.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Näytevälin mediaani kertoo havaintojen keskimmäisen arvon jakaumassa.</span>', unsafe_allow_html=True)
             st.metric("Näytevälin mediaani:", f"{median_dt:.2f}s")
 
     with col4:
         st.info("Kurtoosi | κ")
         with st.container(border=True):
-            st.markdown('<span style="color:pink;">Näytevälin Kurtoosi kertoo jakauman huipun muodon terävyyden.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Näytevälin Kurtoosi kertoo jakauman huipun muodon terävyyden.</span>', unsafe_allow_html=True)
             st.metric("Näytevälin kurtoosi:", f"{kurtosis_dt:.2f}s")
 
     with col5:
         st.info("Skewness | γ")
         with st.container(border=True):
-            st.markdown('<span style="color:pink;">Näytevälin Skewness (vinous) kertoo jakauman vinouden.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Näytevälin Skewness (vinous) kertoo jakauman vinouden.</span>', unsafe_allow_html=True)
             st.metric("Näytevälin vinous:", f"{skew_dt:.2f}s")
             st.write("")
 
     #Luodaan kuvaaja ajallisesta jakautumisesta
     st.title("Ajallinen jakautuminen")
     with st.container(border=True):
-        st.markdown('<span style="color:pink;">Ajallinen jakautuminen kertoo meille, kuinka monta havaintoa nähdään päivittäin, viikoittain sekä kuukausittain.</span>', unsafe_allow_html=True)
+        st.markdown('<span style="color:#483EA4;">Ajallinen jakautuminen kertoo meille, kuinka monta havaintoa nähdään päivittäin, viikoittain sekä kuukausittain.</span>', unsafe_allow_html=True)
 
     col6, col7, col8 =st.columns(3)
 
@@ -205,9 +205,9 @@ with tab1:
         st.title("Normaalijakauma")
         with st.container(border=True):
             st.info("Keskiarvo ja keskihajonta")
-            st.markdown('<span style="color:pink;">Näytevälin keskiarvo kertoo keskimääräisen aikaeron peräkkäisten havaintojen välillä.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Näytevälin keskiarvo kertoo keskimääräisen aikaeron peräkkäisten havaintojen välillä.</span>', unsafe_allow_html=True)
             st.metric("Keskiarvo | μ", f"{mean_dt:.2f}s")
-            st.markdown('<span style="color:pink;">Näytevälin keskihajonta kertoo näytevälin aikaerojen hajonnan eli vaihtelun määrän.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Näytevälin keskihajonta kertoo näytevälin aikaerojen hajonnan eli vaihtelun määrän.</span>', unsafe_allow_html=True)
             st.metric("Keskihajonta | σ", f"{std_dt:.2f}s")
 
         #Lasketaan normaalijakauma
@@ -228,7 +228,7 @@ with tab1:
         st.title("Outlierit")
         with st.container(border=True):
             st.info("Z-pisteet")
-            st.markdown('<span style="color:pink;">Outlierien löytämiseen käytettiin Z-piste kaavaa: z = (x - μ) / σ.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Outlierien löytämiseen käytettiin Z-piste kaavaa: z = (x - μ) / σ.</span>', unsafe_allow_html=True)
             st.metric("Korkein Z-piste", f"{z_scores.max():.2f}")
             st.metric("Matalin Z-piste", f"{z_scores.min():.2f}")
 
@@ -258,31 +258,31 @@ with tab2:
     with col1:
         st.info("Keskiarvo | μ")
         with st.container(border=True):
-            st.markdown('<span style="color:pink;">X-kordinaatin keskiarvo antaa keskimääräisen sijainnin X-akselilla.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">X-kordinaatin keskiarvo antaa keskimääräisen sijainnin X-akselilla.</span>', unsafe_allow_html=True)
             st.metric("X-kordinaatin", f"{x_mean:.2f}")
 
     with col2:
         st.info("Keskihajonta | σ")
         with st.container(border=True):
-            st.markdown('<span style="color:pink;">X-kordinaatin keskihajonta mittaa X-arvojen hajontaa.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">X-kordinaatin keskihajonta mittaa X-arvojen hajontaa.</span>', unsafe_allow_html=True)
             st.metric("X-kordinaatin", f"{x_std:.2f}")
 
     with col3:
         st.info("Mediaani | η")
         with st.container(border=True):
-            st.markdown('<span style="color:pink;">X-kordinaatin mediaani kertoo keskimmäisen X-arvon.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">X-kordinaatin mediaani kertoo keskimmäisen X-arvon.</span>', unsafe_allow_html=True)
             st.metric("X-kordinaatin", f"{x_median:.2f}")
 
     with col4:
         st.info("Kurtoosi | κ")
         with st.container(border=True):
-            st.markdown('<span style="color:pink;">X-kordinaatin kurtoosi kuvaa X-arvojen jakauman muotoa.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">X-kordinaatin kurtoosi kuvaa X-arvojen jakauman muotoa.</span>', unsafe_allow_html=True)
             st.metric("X-kordinaatin", f"{x_kurtosis:.2f}")
 
     with col5:
         st.info("Skewness | γ")
         with st.container(border=True):
-            st.markdown('<span style="color:pink;">X-kordinaatin vinous kuvaa X-arvojen jakauman vinoutta.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">X-kordinaatin vinous kuvaa X-arvojen jakauman vinoutta.</span>', unsafe_allow_html=True)
             st.metric("X-kordinaatin", f"{x_skew:.2f}")
     
     col6, col7, col8, col9, col10 = st.columns(5)
@@ -290,31 +290,31 @@ with tab2:
     with col6:
         st.info("Keskiarvo | μ")
         with st.container(border=True):
-            st.markdown('<span style="color:pink;">Y-kordinaatin keskiarvo antaa keskimääräisen sijainnin Y-akselilla.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Y-kordinaatin keskiarvo antaa keskimääräisen sijainnin Y-akselilla.</span>', unsafe_allow_html=True)
             st.metric("Y-kordinaatin", f"{y_mean:.2f}")
     
     with col7:
         st.info("Keskihajonta | σ")
         with st.container(border=True):
-            st.markdown('<span style="color:pink;">Y-kordinaatin keskihajonta mittaa Y-arvojen hajontaa</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Y-kordinaatin keskihajonta mittaa Y-arvojen hajontaa</span>', unsafe_allow_html=True)
             st.metric("Y-kordinaatin", f"{y_std:.2f}")
 
     with col8:
         st.info("Mediaani | η")
         with st.container(border=True):
-            st.markdown('<span style="color:pink;">Y-kordinaatin mediaani kertoo keskimmäisen Y-arvon.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Y-kordinaatin mediaani kertoo keskimmäisen Y-arvon.</span>', unsafe_allow_html=True)
             st.metric("Y-kordinaatin", f"{y_median:.2f}")
 
     with col9:
         st.info("Kurtoosi | κ")
         with st.container(border=True):
-            st.markdown('<span style="color:pink;">Y-kordinaatin kurtoosi kuvaa X-arvojen jakauman muotoa.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Y-kordinaatin kurtoosi kuvaa X-arvojen jakauman muotoa.</span>', unsafe_allow_html=True)
             st.metric("Y-kordinaatin", f"{y_kurtosis:.2f}")
 
     with col10:
         st.info("Skewness | γ")
         with st.container(border=True):
-            st.markdown('<span style="color:pink;">Y-kordinaatin vinous kuvaa X-arvojen jakauman vinoutta.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Y-kordinaatin vinous kuvaa X-arvojen jakauman vinoutta.</span>', unsafe_allow_html=True)
             st.metric("Y-kordinaatin", f"{y_skew:.2f}")
 
     col11, col12 = st.columns(2)
@@ -324,9 +324,9 @@ with tab2:
         st.title("X-kordinaatin outlierit")
         with st.container(border=True):
             st.info("Z-pisteet")
-            st.markdown('<span style="color:pink;">Kuvaaja tehty Z-piste kaavaa käyttäen: z = (x - μ) / σ.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Kuvaaja tehty Z-piste kaavaa käyttäen: z = (x - μ) / σ.</span>', unsafe_allow_html=True)
             st.metric("Ulkopuolella olevien pisteiden määrä:", f"{outliers_count_x}")
-            st.markdown('<span style="color:pink;">Esiintymistaajuus laskettu: (outlierien määrä / x-kordinaattien kokonaismäärä) * 100%.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Esiintymistaajuus laskettu: (outlierien määrä / x-kordinaattien kokonaismäärä) * 100%.</span>', unsafe_allow_html=True)
             st.metric("Outliereiden esiintymistaajuus:", f"{outliers_frequency_x:.2f}%")
 
         #Lasketaan outlierit z-pisteitä käyttäen x-kordinaatille
@@ -353,9 +353,9 @@ with tab2:
         st.title("Y-kordinaatin outlierit")
         with st.container(border=True):
             st.info("Z-pisteet")
-            st.markdown('<span style="color:pink;">Kuvaaja tehty Z-piste kaavaa käyttäen: z = (x - μ) / σ.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Kuvaaja tehty Z-piste kaavaa käyttäen: z = (x - μ) / σ.</span>', unsafe_allow_html=True)
             st.metric("Ulkopuolella olevien pisteiden määrä:", f"{outliers_count_y}")
-            st.markdown('<span style="color:pink;">Esiintymistaajuus laskettu: (outlierien määrä / y-kordinaattien kokonaismäärä) * 100%.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Esiintymistaajuus laskettu: (outlierien määrä / y-kordinaattien kokonaismäärä) * 100%.</span>', unsafe_allow_html=True)
             st.metric("Outliereiden esiintymistaajuus:", f"{outliers_frequency_y:.2f}%")
 
         #Lasketaan outlierit z-pisteitä käyttäen x-kordinaatille
@@ -384,7 +384,7 @@ with tab2:
         st.title("X-kordinaatin kohina")
         with st.container(border=True):
             st.info("X-pisteet")
-            st.markdown('<span style="color:pink;">Kohina on satunnaista vaihtelua datassa, joka simuloi esimerkiksi epätarkkuuksia.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Kohina on satunnaista vaihtelua datassa, joka simuloi esimerkiksi epätarkkuuksia.</span>', unsafe_allow_html=True)
             st.metric("Suurin X-kordinaatti:", f"{x_max}")
             st.metric("Pienin X-kordinaatti:", f"{x_min}")
             st.metric("Suurin kohinan X-kordinaatti:", f"{x_max_noise:.0f}")
@@ -407,7 +407,7 @@ with tab2:
         st.title("Y-kordinaatin kohina")
         with st.container(border=True):
             st.info("Y-pisteet")
-            st.markdown('<span style="color:pink;">Kohina on satunnaista vaihtelua datassa, joka simuloi esimerkiksi epätarkkuuksia.</span>', unsafe_allow_html=True)
+            st.markdown('<span style="color:#483EA4;">Kohina on satunnaista vaihtelua datassa, joka simuloi esimerkiksi epätarkkuuksia.</span>', unsafe_allow_html=True)
             st.metric("Suurin Y-kordinaatti:", f"{y_max}")
             st.metric("Pienin Y-kordinaatti:", f"{y_min}")
             st.metric("Suurin kohinan Y-kordinaatti:", f"{y_max_noise:.0f}")
