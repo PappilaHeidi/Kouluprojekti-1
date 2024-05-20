@@ -11,7 +11,7 @@ from plotly.subplots import make_subplots
 db_file = "../data/duckdb.database"
 
 def fetch_nodes():
-    con = dd.connect(database=db_file)
+    con = dd.connect(database=db_file, read_only=True)
     array = con.sql("SELECT DISTINCT node_id FROM Silver_SensorData WHERE node_id").fetchall()
     con.close()
     return array
@@ -31,12 +31,12 @@ def read_db_to_df(tbl: str, node_name: list=None):
 
     if node_name:
         node_name = ', '.join(str(i) for i in node_name)
-        con = dd.connect(database=db_file)
+        con = dd.connect(database=db_file, read_only=True)
         df = con.sql(f"SELECT * FROM {tbl} WHERE node_id IN ({node_name})").df()
         con.close()
         return df
     else:
-        con = dd.connect(database=db_file)
+        con = dd.connect(database=db_file, read_only=True)
         #ORDER BY vaaditaan jotta esim reittilaskenta ei mene solmuun
         df = con.sql(f"SELECT * FROM {tbl} ORDER BY node_id").df() 
         con.close()
@@ -93,7 +93,7 @@ def read_paths(df: pd.DataFrame):
 
     return df
 
-def count_paths(df: pd.DataFrame):
+def count_paths(df: pd.DataFrame, nodes: list=None):
     '''
     Laskee reittien määrän
     Hyväksyy read_paths() palauttaman dataframen tai
@@ -107,11 +107,13 @@ def count_paths(df: pd.DataFrame):
         int: reittien määrä
     '''
 
+
     if 'paths' in df.index.names:
         return len(df.groupby(level=0))
     elif 'Vuosi' and 'Kuukausi' and 'Päivä' in df.columns:
+
         #read from db
-        db_df = read_db_to_df('Silver_SensorData')
+        db_df = read_db_to_df('Silver_SensorData', nodes)
         #db_df['timestamp'] = pd.to_datetime(db_df['timestamp'])
 
         #modify columns

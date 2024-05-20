@@ -3,6 +3,8 @@ import pandas as pd
 import gigafunctions as giga
 import numpy as np
 import altair as alt
+from multiprocessing import Pool
+
 
 # Asetetaan sivu
 st.set_page_config(
@@ -42,6 +44,11 @@ def get_months(data):
     data["Kuukausi"] = data["Kuukausi"].map(lambda x: months_names[x-1])
     return sorted(data["Kuukausi"].unique(), key=lambda x: months_names.index(x) if x != "Tammikuu-2020" else float("inf"))
 
+def available_nodes():
+    nodes = giga.fetch_nodes() #fetch all nodes in db
+    node_list = sorted([int(str(x[0])) for x in nodes])
+    return node_list
+
 # Sovelluksen pääosa
 def main():
     st.title(":mostly_sunny: Säätieto historiaa :mostly_sunny:")
@@ -58,6 +65,7 @@ def main():
     # Hae kuukaudet dataframesta
     months = get_months(data)
     
+    selected_nodes = st.multiselect('Select a node', available_nodes(), default=3200)
     # Dropdown-valikko kuukausien valitsemiseksi
     selected_month = st.selectbox("Valitse kuukausi:", months)
     # Vaihtoehto kaikkien päivien tai oman päivän valitsemiseksi
@@ -102,16 +110,16 @@ def main():
         # Täällä lasketaan kuukausien asiakasmäärät ja luodaan kuvaaja niistä
         with col[0]:
             # Lasketaan kuukauden asiakasmäärä ja näytetään se metricin avulla
-            month_customer_count = giga.count_paths(month_data)
+            month_customer_count = giga.count_paths(month_data, selected_nodes)
             # Lasketaan verrataan aiempaan kuukauteen
-            previous_month_count = giga.count_paths(previous_month_data)
+            previous_month_count = giga.count_paths(previous_month_data, selected_nodes)
             month_dif = month_customer_count - previous_month_count
             st.metric("Kuukauden asiakasmäärä:", month_customer_count, month_dif)
             st.write("")
             st.write("")
             # Kuukausien nimet ja lisätään asiakasmäärät oikeisiin kuukausiin
             months_names = ["Maaliskuu-2019", "Huhtikuu-2019", "Toukokuu-2019", "Kesäkuu-2019", "Heinäkuu-2019", "Elokuu-2019", "Syyskuu-2019", "Lokakuu-2019", "Marraskuu-2019", "Joulukuu-2019", "Tammikuu-2020"]
-            month_customer_counts = [giga.count_paths(data[data["Kuukausi"] == month]) for month in months_names]
+            month_customer_counts = [giga.count_paths(data[data["Kuukausi"] == month], selected_nodes) for month in months_names]
             # Luodaan oma dataframe asiakasmäärille ja kuukausille
             data = {'Kuukausi': months_names, 'Asiakasmäärä': month_customer_counts}
             df = pd.DataFrame(data)
@@ -134,20 +142,20 @@ def main():
         days = sorted(data[data["Kuukausi"] == selected_month]["Päivä"].unique())
         selected_day = st.sidebar.selectbox("Valitse päivä:", days)  # Näytä valittu päivä
         selected_day_data = data[(data["Kuukausi"] == selected_month) & (data["Päivä"] == selected_day)]
+        previous_day_data = data[(data["Kuukausi"] == selected_month) & (data["Päivä"] == selected_day - 1)]
         st.markdown('<p class="center big"><b>📊 {}. {} asiakasmäärä & sään keskiarvot 📊</b></p>'.format(selected_day, selected_month), unsafe_allow_html=True)
         st.write(" ")
+        with Pool(3) as p:
+            df_pool = p.starmap(giga.count_paths, [(selected_day_data, selected_nodes), (previous_day_data, selected_nodes)])
+            daily_customer_count = df_pool[0]
+            previous_day_count = df_pool[1]
+
         col = st.columns(2)
         with col[0]:
-            daily_customer_count = giga.count_paths(selected_day_data)
-            st.metric("Päivän asiakasmäärä:", daily_customer_count)
-            #st.write(daily_customer_count)
-            daily_customer_count = giga.count_paths(selected_day_data) 
-            previous_day_data = data[(data["Kuukausi"] == selected_month) & (data["Päivä"] == selected_day - 1)]
-            previous_day_count = giga.count_paths(previous_day_data)
             day_dif = daily_customer_count - previous_day_count
             st.metric("Päivän asiakasmäärä:", daily_customer_count, day_dif)
             # Luodaan oma dataframe päivittäisille asiakasmäärille
-            day_data = {'Päivä': sorted(data[data["Kuukausi"] == selected_month]["Päivä"].unique()), 'Asiakasmäärä': [giga.count_paths(data[(data["Kuukausi"] == selected_month) & (data["Päivä"] == day)]) for day in sorted(data[data["Kuukausi"] == selected_month]["Päivä"].unique())]}
+            day_data = {'Päivä': sorted(data[data["Kuukausi"] == selected_month]["Päivä"].unique()), 'Asiakasmäärä': [giga.count_paths(data[(data["Kuukausi"] == selected_month) & (data["Päivä"] == day)], selected_nodes) for day in sorted(data[data["Kuukausi"] == selected_month]["Päivä"].unique())]}
             day_df = pd.DataFrame(day_data)
             # Järjestetään päivät oikein
             day_df = day_df.sort_values(by="Päivä")
