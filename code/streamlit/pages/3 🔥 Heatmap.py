@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title('Heatmap')
+st.title('☀️ Heatmap ☀️')
 
 st.markdown("""
             Kaupan kartan kuumat kohteet tulostettuna lämpimillä (Punainen 😡) ja kylmillä väreillä (Valkoinen 💀).

@@ -50,12 +50,11 @@ def fetch_data_from_database(connection, kassojen_aluetta):
 
 # Luo Streamlit-sovellus
 def main():
-    st.set_page_config(page_title="📠 Kassojen analytiikka 📠", page_icon="📠", layout="wide")
+    st.set_page_config(page_title="💰 Kassojen analytiikka 💰", page_icon="📠", layout="wide")
     st.title('Kassojen analytiikka')
     st.markdown("""---""")
 
     st.markdown("""
-    ## Tervetuloa Kassojen analytiikka -sovellukseen! 
 
     Tämä sovellus tarjoaa interaktiivisen tavan tarkastella kaupan kassojen alueen liikennettä ja asiakasmääriä. 
         Sovelluksen avulla voit tehdä seuraavia asioita:

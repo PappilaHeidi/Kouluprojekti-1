@@ -15,23 +15,6 @@ services:
       - jupyterhub-network
       
 
-  jupyter-workshop:
-    image: jupyter-workshop
-    build: 
-      context: ./code/jupyter_workshop
-      dockerfile: Dockerfile
-    container_name: jupyter-workshop
-    volumes:
-      - ./code:/home/jovyan/work
-    ports:
-      - 8889:8888
-    environment:
-      - JUPYTER_TOKEN=daika
-      - GRANT_SUDO=yes
-      - JUPYTER_ENABLE_LAB=yes
-    networks:
-      - jupyterhub-network
-
     
 
 networks:
