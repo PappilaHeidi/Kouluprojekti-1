@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
     container_name: streamlit-image
     volumes:
-    - ./code:/code  # lisätty rivi
+    - ./code:/code
     ports:
     - 8501:8501
     networks:
